@@ -1,98 +1,197 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import { FlashList } from '@shopify/flash-list';
+import { useRouter } from 'expo-router';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Linking, RefreshControl, StyleSheet, View } from 'react-native';
+import type { MD3Theme } from 'react-native-paper';
+import { Appbar, FAB, IconButton, Snackbar, useTheme } from 'react-native-paper';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+import { AppListItem, EmptyState, FilterChips, SearchBar, SortMenu } from '@/components/ui';
+import { getAllListedPackageNames } from '@/lib/repository';
+import type { AppInfo } from '@/modules/installed-apps';
+import InstalledAppsModule from '@/modules/installed-apps';
+import { useAppsStore } from '@/stores';
 
-export default function HomeScreen() {
+export default function AppsScreen() {
+  const theme = useTheme<MD3Theme>();
+  const router = useRouter();
+  const [refreshing, setRefreshing] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+
+  const {
+    isLoading,
+    filter,
+    sortField,
+    sortReverse,
+    searchQuery,
+    excludeListed,
+    selectedPackages,
+    isSelectionMode,
+    setApps,
+    setLoading,
+    setLastRefresh,
+    setFilter,
+    setSortField,
+    toggleSortReverse,
+    setSearchQuery,
+    setExcludeListed,
+    setListedPackages,
+    toggleSelection,
+    selectAll,
+    clearSelection,
+    getFilteredApps,
+  } = useAppsStore();
+
+  const filteredApps = getFilteredApps();
+
+  const loadApps = useCallback(async () => {
+    try {
+      setLoading(true);
+      const apps = await InstalledAppsModule.getInstalledApps(true, true);
+      setApps(apps);
+      setLastRefresh(Date.now());
+
+      const listedPkgs = await getAllListedPackageNames();
+      setListedPackages(listedPkgs);
+    } catch (error) {
+      console.error('Failed to load apps:', error);
+      setSnackbarMessage('Failed to load apps');
+    } finally {
+      setLoading(false);
+    }
+  }, [setApps, setLoading, setLastRefresh, setListedPackages]);
+
+  useEffect(() => {
+    loadApps();
+  }, [loadApps]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadApps();
+    setRefreshing(false);
+  }, [loadApps]);
+
+  const handleAppPress = useCallback(
+    (app: AppInfo) => {
+      if (isSelectionMode) {
+        toggleSelection(app.packageName);
+      } else {
+        const playStoreUrl = `https://play.google.com/store/apps/details?id=${app.packageName}`;
+        Linking.openURL(playStoreUrl).catch(() => {
+          setSnackbarMessage('Could not open Play Store');
+        });
+      }
+    },
+    [isSelectionMode, toggleSelection]
+  );
+
+  const handleAppLongPress = useCallback(
+    (app: AppInfo) => {
+      toggleSelection(app.packageName);
+    },
+    [toggleSelection]
+  );
+
+  const handleAddToList = useCallback(() => {
+    if (selectedPackages.size === 0) return;
+    router.push({
+      pathname: '/add-to-list',
+      params: { packages: Array.from(selectedPackages).join(',') },
+    });
+  }, [selectedPackages, router]);
+
+  const renderItem = useCallback(
+    ({ item }: { item: AppInfo }) => (
+      <AppListItem
+        app={item}
+        isSelected={selectedPackages.has(item.packageName)}
+        isSelectionMode={isSelectionMode}
+        showStatus
+        onPress={() => handleAppPress(item)}
+        onLongPress={() => handleAppLongPress(item)}
+      />
+    ),
+    [selectedPackages, isSelectionMode, handleAppPress, handleAppLongPress]
+  );
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <Appbar.Header style={{ backgroundColor: theme.colors.surface }}>
+        {isSelectionMode ? (
+          <>
+            <Appbar.Action icon="close" onPress={clearSelection} />
+            <Appbar.Content title={`${selectedPackages.size} selected`} />
+            <Appbar.Action
+              icon="select-all"
+              onPress={() => selectAll(filteredApps.map((a) => a.packageName))}
             />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+          </>
+        ) : (
+          <>
+            <Appbar.Content title="Installed Apps" />
+            <IconButton
+              icon={excludeListed ? 'filter' : 'filter-outline'}
+              onPress={() => setExcludeListed(!excludeListed)}
+            />
+            <SortMenu
+              currentSort={sortField}
+              isReversed={sortReverse}
+              onSortChange={setSortField}
+              onReverseToggle={toggleSortReverse}
+            />
+          </>
+        )}
+      </Appbar.Header>
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+      <FilterChips currentFilter={filter} onFilterChange={setFilter} />
+
+      <FlashList
+        data={filteredApps}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.packageName}
+        estimatedItemSize={80}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[theme.colors.primary]}
+          />
+        }
+        ListEmptyComponent={
+          isLoading ? null : (
+            <EmptyState
+              icon="magnify"
+              title="No apps found"
+              description={searchQuery ? 'Try a different search term' : 'Pull to refresh'}
+            />
+          )
+        }
+      />
+
+      {isSelectionMode && selectedPackages.size > 0 && (
+        <FAB
+          icon="playlist-plus"
+          label="Add to List"
+          onPress={handleAddToList}
+          style={[styles.fab, { backgroundColor: theme.colors.primaryContainer }]}
+          color={theme.colors.onPrimaryContainer}
+        />
+      )}
+
+      <Snackbar visible={!!snackbarMessage} onDismiss={() => setSnackbarMessage('')} duration={3000}>
+        {snackbarMessage}
+      </Snackbar>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
+  container: {
+    flex: 1,
   },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
+  fab: {
     position: 'absolute',
+    right: 16,
+    bottom: 16,
   },
 });
