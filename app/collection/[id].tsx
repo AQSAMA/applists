@@ -1,13 +1,17 @@
+import { cacheDirectory, writeAsStringAsync } from 'expo-file-system/legacy';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import * as Sharing from 'expo-sharing';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import type { MD3Theme } from 'react-native-paper';
-import { Appbar, FAB, Menu, Snackbar, Text, useTheme } from 'react-native-paper';
+import { Appbar, Button, Dialog, Divider, FAB, List, Menu, Portal, Snackbar, Text, useTheme } from 'react-native-paper';
 
 import { EmptyState, ListCard, SearchBar } from '@/components/ui';
 import type { AppList, Collection } from '@/lib/repository';
 import {
     addListToCollection,
+    exportCollectionData,
+    findDuplicatesInCollection,
     getAllLists,
     getCollection,
     getCollectionLists,
@@ -28,6 +32,8 @@ export default function CollectionDetailScreen() {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [menuVisible, setMenuVisible] = useState(false);
   const [addMenuVisible, setAddMenuVisible] = useState(false);
+  const [duplicatesDialogVisible, setDuplicatesDialogVisible] = useState(false);
+  const [duplicates, setDuplicates] = useState<{ packageName: string; listNames: string[] }[]>([]);
 
   const loadData = useCallback(async () => {
     if (!collectionId) return;
@@ -80,6 +86,40 @@ export default function CollectionDetailScreen() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      const data = await exportCollectionData(collectionId);
+      const fileName = `${collection?.name?.replace(/[^a-z0-9]/gi, '_') || 'collection'}.json`;
+      const filePath = `${cacheDirectory}${fileName}`;
+      await writeAsStringAsync(filePath, JSON.stringify(data, null, 2));
+      await Sharing.shareAsync(filePath, {
+        mimeType: 'application/json',
+        dialogTitle: `Export ${collection?.name || 'Collection'}`,
+      });
+    } catch (error) {
+      console.error('Failed to export collection:', error);
+      setSnackbarMessage('Failed to export collection');
+    }
+  };
+
+  const handleCheckDuplicates = async () => {
+    try {
+      const duplicateMap = await findDuplicatesInCollection(collectionId);
+      const listNameMap = new Map(lists.map((l) => [l.id, l.name]));
+      
+      const duplicateList = Array.from(duplicateMap.entries()).map(([packageName, listIds]) => ({
+        packageName,
+        listNames: listIds.map((id) => listNameMap.get(id) || `List ${id}`),
+      }));
+      
+      setDuplicates(duplicateList);
+      setDuplicatesDialogVisible(true);
+    } catch (error) {
+      console.error('Failed to check duplicates:', error);
+      setSnackbarMessage('Failed to check duplicates');
+    }
+  };
+
   const filteredLists = searchQuery.trim()
     ? lists.filter(
         (l) =>
@@ -105,7 +145,7 @@ export default function CollectionDetailScreen() {
               <Menu.Item
                 onPress={() => {
                   setMenuVisible(false);
-                  // TODO: Export collection
+                  handleExport();
                 }}
                 title="Export"
                 leadingIcon="export"
@@ -113,7 +153,7 @@ export default function CollectionDetailScreen() {
               <Menu.Item
                 onPress={() => {
                   setMenuVisible(false);
-                  // TODO: Check duplicates
+                  handleCheckDuplicates();
                 }}
                 title="Check Duplicates"
                 leadingIcon="content-duplicate"
@@ -171,6 +211,33 @@ export default function CollectionDetailScreen() {
           ))
         )}
       </Menu>
+
+      <Portal>
+        <Dialog visible={duplicatesDialogVisible} onDismiss={() => setDuplicatesDialogVisible(false)}>
+          <Dialog.Title>Duplicate Apps</Dialog.Title>
+          <Dialog.Content>
+            {duplicates.length === 0 ? (
+              <Text>No duplicate apps found in this collection.</Text>
+            ) : (
+              <ScrollView style={{ maxHeight: 300 }}>
+                {duplicates.map((dup, index) => (
+                  <View key={dup.packageName}>
+                    <List.Item
+                      title={dup.packageName}
+                      description={`In: ${dup.listNames.join(', ')}`}
+                      left={(props) => <List.Icon {...props} icon="content-duplicate" />}
+                    />
+                    {index < duplicates.length - 1 && <Divider />}
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setDuplicatesDialogVisible(false)}>Close</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
 
       <Snackbar visible={!!snackbarMessage} onDismiss={() => setSnackbarMessage('')} duration={3000}>
         {snackbarMessage}

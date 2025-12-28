@@ -1,3 +1,5 @@
+import * as DocumentPicker from 'expo-document-picker';
+import { readAsStringAsync } from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -15,7 +17,7 @@ import {
 
 import { CollectionCard, EmptyState, SearchBar } from '@/components/ui';
 import type { Collection } from '@/lib/repository';
-import { createCollection, deleteCollection, getAllCollections } from '@/lib/repository';
+import { createCollection, deleteCollection, getAllCollections, importCollectionData } from '@/lib/repository';
 import { useListsStore } from '@/stores';
 
 export default function CollectionsScreen() {
@@ -87,6 +89,27 @@ export default function CollectionsScreen() {
     setDeleteDialogVisible(true);
   };
 
+  const handleImport = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/json',
+        copyToCacheDirectory: true,
+      });
+      if (result.canceled || !result.assets?.[0]) return;
+
+      const fileUri = result.assets[0].uri;
+      const content = await readAsStringAsync(fileUri);
+      const data = JSON.parse(content);
+      
+      await importCollectionData(data);
+      await loadCollections();
+      setSnackbarMessage('Collection imported successfully');
+    } catch (error) {
+      console.error('Failed to import collection:', error);
+      setSnackbarMessage('Failed to import collection. Check file format.');
+    }
+  };
+
   const filteredCollections = searchQuery.trim()
     ? collections.filter(
         (c) =>
@@ -99,6 +122,7 @@ export default function CollectionsScreen() {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Appbar.Header style={{ backgroundColor: theme.colors.surface }}>
         <Appbar.Content title="Collections" />
+        <Appbar.Action icon="import" onPress={handleImport} />
       </Appbar.Header>
 
       <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Search collections..." />

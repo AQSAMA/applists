@@ -1,5 +1,5 @@
-import type { ListAppInfo } from '../modules/installed-apps';
-import { getDatabase } from './database';
+import type { ListAppInfo } from "../modules/installed-apps";
+import { getDatabase } from "./database";
 
 // List types
 export interface AppList {
@@ -35,11 +35,14 @@ export interface ListApp extends ListAppInfo {
 
 // ============ LISTS ============
 
-export async function createList(name: string, description?: string): Promise<number> {
+export async function createList(
+  name: string,
+  description?: string,
+): Promise<number> {
   const db = await getDatabase();
   const result = await db.runAsync(
-    'INSERT INTO lists (name, description) VALUES (?, ?)',
-    [name, description || null]
+    "INSERT INTO lists (name, description) VALUES (?, ?)",
+    [name, description || null],
   );
   return result.lastInsertRowId;
 }
@@ -60,8 +63,8 @@ export async function getAllLists(): Promise<AppList[]> {
     GROUP BY l.id
     ORDER BY l.updated_at DESC
   `);
-  
-  return rows.map(row => ({
+
+  return rows.map((row) => ({
     id: row.id,
     name: row.name,
     description: row.description,
@@ -79,10 +82,10 @@ export async function getList(id: number): Promise<AppList | null> {
     description: string | null;
     created_at: number;
     updated_at: number;
-  }>('SELECT * FROM lists WHERE id = ?', [id]);
-  
+  }>("SELECT * FROM lists WHERE id = ?", [id]);
+
   if (!row) return null;
-  
+
   return {
     id: row.id,
     name: row.name,
@@ -92,26 +95,33 @@ export async function getList(id: number): Promise<AppList | null> {
   };
 }
 
-export async function updateList(id: number, name: string, description?: string): Promise<void> {
+export async function updateList(
+  id: number,
+  name: string,
+  description?: string,
+): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
-    'UPDATE lists SET name = ?, description = ?, updated_at = ? WHERE id = ?',
-    [name, description || null, Date.now(), id]
+    "UPDATE lists SET name = ?, description = ?, updated_at = ? WHERE id = ?",
+    [name, description || null, Date.now(), id],
   );
 }
 
 export async function deleteList(id: number): Promise<void> {
   const db = await getDatabase();
-  await db.runAsync('DELETE FROM lists WHERE id = ?', [id]);
+  await db.runAsync("DELETE FROM lists WHERE id = ?", [id]);
 }
 
 // ============ LIST APPS ============
 
-export async function addAppToList(listId: number, app: ListAppInfo): Promise<number> {
+export async function addAppToList(
+  listId: number,
+  app: ListAppInfo,
+): Promise<number> {
   const db = await getDatabase();
   const result = await db.runAsync(
-    `INSERT OR REPLACE INTO list_apps 
-     (list_id, package_name, title, version, version_code, is_system, apk_size, 
+    `INSERT OR REPLACE INTO list_apps
+     (list_id, package_name, title, version, version_code, is_system, apk_size,
       cache_size, data_size, install_time, last_update_time, min_sdk, target_sdk)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
@@ -128,22 +138,28 @@ export async function addAppToList(listId: number, app: ListAppInfo): Promise<nu
       app.lastUpdateTime,
       app.minSDK,
       app.targetSDK,
-    ]
+    ],
   );
-  
+
   // Update list's updated_at
-  await db.runAsync('UPDATE lists SET updated_at = ? WHERE id = ?', [Date.now(), listId]);
-  
+  await db.runAsync("UPDATE lists SET updated_at = ? WHERE id = ?", [
+    Date.now(),
+    listId,
+  ]);
+
   return result.lastInsertRowId;
 }
 
-export async function addAppsToList(listId: number, apps: ListAppInfo[]): Promise<void> {
+export async function addAppsToList(
+  listId: number,
+  apps: ListAppInfo[],
+): Promise<void> {
   const db = await getDatabase();
-  
+
   for (const app of apps) {
     await db.runAsync(
-      `INSERT OR IGNORE INTO list_apps 
-       (list_id, package_name, title, version, version_code, is_system, apk_size, 
+      `INSERT OR IGNORE INTO list_apps
+       (list_id, package_name, title, version, version_code, is_system, apk_size,
         cache_size, data_size, install_time, last_update_time, min_sdk, target_sdk)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
@@ -160,11 +176,14 @@ export async function addAppsToList(listId: number, apps: ListAppInfo[]): Promis
         app.lastUpdateTime,
         app.minSDK,
         app.targetSDK,
-      ]
+      ],
     );
   }
-  
-  await db.runAsync('UPDATE lists SET updated_at = ? WHERE id = ?', [Date.now(), listId]);
+
+  await db.runAsync("UPDATE lists SET updated_at = ? WHERE id = ?", [
+    Date.now(),
+    listId,
+  ]);
 }
 
 export async function getListApps(listId: number): Promise<ListApp[]> {
@@ -185,9 +204,9 @@ export async function getListApps(listId: number): Promise<ListApp[]> {
     min_sdk: number;
     target_sdk: number;
     added_at: number;
-  }>('SELECT * FROM list_apps WHERE list_id = ? ORDER BY title ASC', [listId]);
-  
-  return rows.map(row => ({
+  }>("SELECT * FROM list_apps WHERE list_id = ? ORDER BY title ASC", [listId]);
+
+  return rows.map((row) => ({
     id: row.id,
     listId: row.list_id,
     packageName: row.package_name,
@@ -207,58 +226,78 @@ export async function getListApps(listId: number): Promise<ListApp[]> {
   }));
 }
 
-export async function removeAppFromList(listId: number, packageName: string): Promise<void> {
+export async function removeAppFromList(
+  listId: number,
+  packageName: string,
+): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
-    'DELETE FROM list_apps WHERE list_id = ? AND package_name = ?',
-    [listId, packageName]
+    "DELETE FROM list_apps WHERE list_id = ? AND package_name = ?",
+    [listId, packageName],
   );
-  await db.runAsync('UPDATE lists SET updated_at = ? WHERE id = ?', [Date.now(), listId]);
+  await db.runAsync("UPDATE lists SET updated_at = ? WHERE id = ?", [
+    Date.now(),
+    listId,
+  ]);
 }
 
-export async function removeAppsFromList(listId: number, packageNames: string[]): Promise<void> {
+export async function removeAppsFromList(
+  listId: number,
+  packageNames: string[],
+): Promise<void> {
   const db = await getDatabase();
-  const placeholders = packageNames.map(() => '?').join(',');
+  const placeholders = packageNames.map(() => "?").join(",");
   await db.runAsync(
     `DELETE FROM list_apps WHERE list_id = ? AND package_name IN (${placeholders})`,
-    [listId, ...packageNames]
+    [listId, ...packageNames],
   );
-  await db.runAsync('UPDATE lists SET updated_at = ? WHERE id = ?', [Date.now(), listId]);
+  await db.runAsync("UPDATE lists SET updated_at = ? WHERE id = ?", [
+    Date.now(),
+    listId,
+  ]);
 }
 
-export async function isAppInList(listId: number, packageName: string): Promise<boolean> {
+export async function isAppInList(
+  listId: number,
+  packageName: string,
+): Promise<boolean> {
   const db = await getDatabase();
   const row = await db.getFirstAsync<{ count: number }>(
-    'SELECT COUNT(*) as count FROM list_apps WHERE list_id = ? AND package_name = ?',
-    [listId, packageName]
+    "SELECT COUNT(*) as count FROM list_apps WHERE list_id = ? AND package_name = ?",
+    [listId, packageName],
   );
   return (row?.count || 0) > 0;
 }
 
-export async function getAppListMemberships(packageName: string): Promise<number[]> {
+export async function getAppListMemberships(
+  packageName: string,
+): Promise<number[]> {
   const db = await getDatabase();
   const rows = await db.getAllAsync<{ list_id: number }>(
-    'SELECT list_id FROM list_apps WHERE package_name = ?',
-    [packageName]
+    "SELECT list_id FROM list_apps WHERE package_name = ?",
+    [packageName],
   );
-  return rows.map(r => r.list_id);
+  return rows.map((r) => r.list_id);
 }
 
 export async function getAllListedPackageNames(): Promise<Set<string>> {
   const db = await getDatabase();
   const rows = await db.getAllAsync<{ package_name: string }>(
-    'SELECT DISTINCT package_name FROM list_apps'
+    "SELECT DISTINCT package_name FROM list_apps",
   );
-  return new Set(rows.map(r => r.package_name));
+  return new Set(rows.map((r) => r.package_name));
 }
 
 // ============ COLLECTIONS ============
 
-export async function createCollection(name: string, description?: string): Promise<number> {
+export async function createCollection(
+  name: string,
+  description?: string,
+): Promise<number> {
   const db = await getDatabase();
   const result = await db.runAsync(
-    'INSERT INTO collections (name, description) VALUES (?, ?)',
-    [name, description || null]
+    "INSERT INTO collections (name, description) VALUES (?, ?)",
+    [name, description || null],
   );
   return result.lastInsertRowId;
 }
@@ -279,8 +318,8 @@ export async function getAllCollections(): Promise<Collection[]> {
     GROUP BY c.id
     ORDER BY c.updated_at DESC
   `);
-  
-  return rows.map(row => ({
+
+  return rows.map((row) => ({
     id: row.id,
     name: row.name,
     description: row.description,
@@ -298,10 +337,10 @@ export async function getCollection(id: number): Promise<Collection | null> {
     description: string | null;
     created_at: number;
     updated_at: number;
-  }>('SELECT * FROM collections WHERE id = ?', [id]);
-  
+  }>("SELECT * FROM collections WHERE id = ?", [id]);
+
   if (!row) return null;
-  
+
   return {
     id: row.id,
     name: row.name,
@@ -311,44 +350,62 @@ export async function getCollection(id: number): Promise<Collection | null> {
   };
 }
 
-export async function updateCollection(id: number, name: string, description?: string): Promise<void> {
+export async function updateCollection(
+  id: number,
+  name: string,
+  description?: string,
+): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
-    'UPDATE collections SET name = ?, description = ?, updated_at = ? WHERE id = ?',
-    [name, description || null, Date.now(), id]
+    "UPDATE collections SET name = ?, description = ?, updated_at = ? WHERE id = ?",
+    [name, description || null, Date.now(), id],
   );
 }
 
 export async function deleteCollection(id: number): Promise<void> {
   const db = await getDatabase();
-  await db.runAsync('DELETE FROM collections WHERE id = ?', [id]);
+  await db.runAsync("DELETE FROM collections WHERE id = ?", [id]);
 }
 
-export async function addListToCollection(collectionId: number, listId: number): Promise<void> {
+export async function addListToCollection(
+  collectionId: number,
+  listId: number,
+): Promise<void> {
   const db = await getDatabase();
   const maxPos = await db.getFirstAsync<{ max_pos: number | null }>(
-    'SELECT MAX(position) as max_pos FROM collection_lists WHERE collection_id = ?',
-    [collectionId]
+    "SELECT MAX(position) as max_pos FROM collection_lists WHERE collection_id = ?",
+    [collectionId],
   );
   const position = (maxPos?.max_pos ?? -1) + 1;
-  
+
   await db.runAsync(
-    'INSERT OR IGNORE INTO collection_lists (collection_id, list_id, position) VALUES (?, ?, ?)',
-    [collectionId, listId, position]
+    "INSERT OR IGNORE INTO collection_lists (collection_id, list_id, position) VALUES (?, ?, ?)",
+    [collectionId, listId, position],
   );
-  await db.runAsync('UPDATE collections SET updated_at = ? WHERE id = ?', [Date.now(), collectionId]);
+  await db.runAsync("UPDATE collections SET updated_at = ? WHERE id = ?", [
+    Date.now(),
+    collectionId,
+  ]);
 }
 
-export async function removeListFromCollection(collectionId: number, listId: number): Promise<void> {
+export async function removeListFromCollection(
+  collectionId: number,
+  listId: number,
+): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
-    'DELETE FROM collection_lists WHERE collection_id = ? AND list_id = ?',
-    [collectionId, listId]
+    "DELETE FROM collection_lists WHERE collection_id = ? AND list_id = ?",
+    [collectionId, listId],
   );
-  await db.runAsync('UPDATE collections SET updated_at = ? WHERE id = ?', [Date.now(), collectionId]);
+  await db.runAsync("UPDATE collections SET updated_at = ? WHERE id = ?", [
+    Date.now(),
+    collectionId,
+  ]);
 }
 
-export async function getCollectionLists(collectionId: number): Promise<AppList[]> {
+export async function getCollectionLists(
+  collectionId: number,
+): Promise<AppList[]> {
   const db = await getDatabase();
   const rows = await db.getAllAsync<{
     id: number;
@@ -357,7 +414,8 @@ export async function getCollectionLists(collectionId: number): Promise<AppList[
     created_at: number;
     updated_at: number;
     app_count: number;
-  }>(`
+  }>(
+    `
     SELECT l.*, COUNT(la.id) as app_count
     FROM lists l
     INNER JOIN collection_lists cl ON l.id = cl.list_id
@@ -365,9 +423,11 @@ export async function getCollectionLists(collectionId: number): Promise<AppList[
     WHERE cl.collection_id = ?
     GROUP BY l.id
     ORDER BY cl.position ASC
-  `, [collectionId]);
-  
-  return rows.map(row => ({
+  `,
+    [collectionId],
+  );
+
+  return rows.map((row) => ({
     id: row.id,
     name: row.name,
     description: row.description,
@@ -382,120 +442,154 @@ export async function getCollectionLists(collectionId: number): Promise<AppList[
 export async function createTag(name: string, color?: string): Promise<number> {
   const db = await getDatabase();
   const result = await db.runAsync(
-    'INSERT INTO tags (name, color) VALUES (?, ?)',
-    [name, color || null]
+    "INSERT INTO tags (name, color) VALUES (?, ?)",
+    [name, color || null],
   );
   return result.lastInsertRowId;
 }
 
 export async function getAllTags(): Promise<Tag[]> {
   const db = await getDatabase();
-  const rows = await db.getAllAsync<{ id: number; name: string; color: string | null }>(
-    'SELECT * FROM tags ORDER BY name ASC'
-  );
+  const rows = await db.getAllAsync<{
+    id: number;
+    name: string;
+    color: string | null;
+  }>("SELECT * FROM tags ORDER BY name ASC");
   return rows;
 }
 
 export async function deleteTag(id: number): Promise<void> {
   const db = await getDatabase();
-  await db.runAsync('DELETE FROM tags WHERE id = ?', [id]);
+  await db.runAsync("DELETE FROM tags WHERE id = ?", [id]);
 }
 
-export async function addTagToListApp(listAppId: number, tagId: number): Promise<void> {
+export async function addTagToListApp(
+  listAppId: number,
+  tagId: number,
+): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
-    'INSERT OR IGNORE INTO list_app_tags (list_app_id, tag_id) VALUES (?, ?)',
-    [listAppId, tagId]
+    "INSERT OR IGNORE INTO list_app_tags (list_app_id, tag_id) VALUES (?, ?)",
+    [listAppId, tagId],
   );
 }
 
-export async function removeTagFromListApp(listAppId: number, tagId: number): Promise<void> {
+export async function removeTagFromListApp(
+  listAppId: number,
+  tagId: number,
+): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
-    'DELETE FROM list_app_tags WHERE list_app_id = ? AND tag_id = ?',
-    [listAppId, tagId]
+    "DELETE FROM list_app_tags WHERE list_app_id = ? AND tag_id = ?",
+    [listAppId, tagId],
   );
 }
 
 export async function getListAppTags(listAppId: number): Promise<Tag[]> {
   const db = await getDatabase();
-  const rows = await db.getAllAsync<{ id: number; name: string; color: string | null }>(`
+  const rows = await db.getAllAsync<{
+    id: number;
+    name: string;
+    color: string | null;
+  }>(
+    `
     SELECT t.* FROM tags t
     INNER JOIN list_app_tags lat ON t.id = lat.tag_id
     WHERE lat.list_app_id = ?
     ORDER BY t.name ASC
-  `, [listAppId]);
+  `,
+    [listAppId],
+  );
   return rows;
 }
 
 // ============ ICON CACHE ============
 
-export async function getCachedIcon(packageName: string): Promise<string | null> {
+export async function getCachedIcon(
+  packageName: string,
+): Promise<string | null> {
   const db = await getDatabase();
   const row = await db.getFirstAsync<{ icon_base64: string }>(
-    'SELECT icon_base64 FROM icon_cache WHERE package_name = ?',
-    [packageName]
+    "SELECT icon_base64 FROM icon_cache WHERE package_name = ?",
+    [packageName],
   );
   return row?.icon_base64 || null;
 }
 
-export async function cacheIcon(packageName: string, iconBase64: string): Promise<void> {
+export async function cacheIcon(
+  packageName: string,
+  iconBase64: string,
+): Promise<void> {
   const db = await getDatabase();
   await db.runAsync(
-    'INSERT OR REPLACE INTO icon_cache (package_name, icon_base64, cached_at) VALUES (?, ?, ?)',
-    [packageName, iconBase64, Date.now()]
+    "INSERT OR REPLACE INTO icon_cache (package_name, icon_base64, cached_at) VALUES (?, ?, ?)",
+    [packageName, iconBase64, Date.now()],
   );
 }
 
 export async function clearIconCache(): Promise<void> {
   const db = await getDatabase();
-  await db.runAsync('DELETE FROM icon_cache');
+  await db.runAsync("DELETE FROM icon_cache");
 }
 
 // ============ MERGE LISTS ============
 
-export async function mergeLists(sourceListIds: number[], targetListId: number): Promise<void> {
+export async function mergeLists(
+  sourceListIds: number[],
+  targetListId: number,
+): Promise<void> {
   const db = await getDatabase();
-  
+
   for (const sourceId of sourceListIds) {
     if (sourceId === targetListId) continue;
-    
+
     // Move apps from source to target (ignore duplicates)
-    await db.runAsync(`
-      INSERT OR IGNORE INTO list_apps 
-        (list_id, package_name, title, version, version_code, is_system, apk_size, 
+    await db.runAsync(
+      `
+      INSERT OR IGNORE INTO list_apps
+        (list_id, package_name, title, version, version_code, is_system, apk_size,
          cache_size, data_size, install_time, last_update_time, min_sdk, target_sdk, added_at)
-      SELECT ?, package_name, title, version, version_code, is_system, apk_size, 
+      SELECT ?, package_name, title, version, version_code, is_system, apk_size,
              cache_size, data_size, install_time, last_update_time, min_sdk, target_sdk, added_at
       FROM list_apps WHERE list_id = ?
-    `, [targetListId, sourceId]);
-    
+    `,
+      [targetListId, sourceId],
+    );
+
     // Delete source list
-    await db.runAsync('DELETE FROM lists WHERE id = ?', [sourceId]);
+    await db.runAsync("DELETE FROM lists WHERE id = ?", [sourceId]);
   }
-  
-  await db.runAsync('UPDATE lists SET updated_at = ? WHERE id = ?', [Date.now(), targetListId]);
+
+  await db.runAsync("UPDATE lists SET updated_at = ? WHERE id = ?", [
+    Date.now(),
+    targetListId,
+  ]);
 }
 
 // ============ DUPLICATE DETECTION ============
 
-export async function findDuplicatesInCollection(collectionId: number): Promise<Map<string, number[]>> {
+export async function findDuplicatesInCollection(
+  collectionId: number,
+): Promise<Map<string, number[]>> {
   const db = await getDatabase();
-  const rows = await db.getAllAsync<{ package_name: string; list_id: number }>(`
+  const rows = await db.getAllAsync<{ package_name: string; list_id: number }>(
+    `
     SELECT la.package_name, la.list_id
     FROM list_apps la
     INNER JOIN collection_lists cl ON la.list_id = cl.list_id
     WHERE cl.collection_id = ?
     ORDER BY la.package_name
-  `, [collectionId]);
-  
+  `,
+    [collectionId],
+  );
+
   const appLists = new Map<string, number[]>();
   for (const row of rows) {
     const lists = appLists.get(row.package_name) || [];
     lists.push(row.list_id);
     appLists.set(row.package_name, lists);
   }
-  
+
   // Filter to only duplicates (apps in more than one list)
   const duplicates = new Map<string, number[]>();
   for (const [pkg, lists] of appLists) {
@@ -503,6 +597,99 @@ export async function findDuplicatesInCollection(collectionId: number): Promise<
       duplicates.set(pkg, lists);
     }
   }
-  
+
   return duplicates;
+}
+
+// ============ IMPORT/EXPORT ============
+
+export async function exportListData(listId: number): Promise<any> {
+  const list = await getList(listId);
+  if (!list) throw new Error("List not found");
+
+  const apps = await getListApps(listId);
+
+  return {
+    type: "applist",
+    version: 1,
+    name: list.name,
+    description: list.description,
+    apps: apps.map((app) => ({
+      packageName: app.packageName,
+      title: app.title,
+      version: app.version,
+      versionCode: app.versionCode,
+      isSystem: app.isSystem,
+      apkSize: app.apkSize,
+      installTime: app.installTime,
+      lastUpdateTime: app.lastUpdateTime,
+      minSDK: app.minSDK,
+      targetSDK: app.targetSDK,
+    })),
+  };
+}
+
+export async function importListData(data: any): Promise<number> {
+  if (!data || data.type !== "applist") throw new Error("Invalid list data");
+
+  const listId = await createList(data.name, data.description);
+  if (data.apps && Array.isArray(data.apps)) {
+    await addAppsToList(listId, data.apps);
+  }
+  return listId;
+}
+
+export async function exportCollectionData(collectionId: number): Promise<any> {
+  const collection = await getCollection(collectionId);
+  if (!collection) throw new Error("Collection not found");
+
+  const lists = await getCollectionLists(collectionId);
+  const listsWithApps = await Promise.all(
+    lists.map(async (l) => {
+      const apps = await getListApps(l.id);
+      return {
+        name: l.name,
+        description: l.description,
+        apps: apps.map((app) => ({
+          packageName: app.packageName,
+          title: app.title,
+          version: app.version,
+          versionCode: app.versionCode,
+          isSystem: app.isSystem,
+          apkSize: app.apkSize,
+          installTime: app.installTime,
+          lastUpdateTime: app.lastUpdateTime,
+          minSDK: app.minSDK,
+          targetSDK: app.targetSDK,
+        })),
+      };
+    }),
+  );
+
+  return {
+    type: "appcollection",
+    version: 1,
+    name: collection.name,
+    description: collection.description,
+    lists: listsWithApps,
+  };
+}
+
+export async function importCollectionData(data: any): Promise<number> {
+  if (!data || data.type !== "appcollection")
+    throw new Error("Invalid collection data");
+
+  const collectionId = await createCollection(data.name, data.description);
+
+  if (data.lists && Array.isArray(data.lists)) {
+    for (const listData of data.lists) {
+      const listId = await createList(listData.name, listData.description);
+      if (listData.apps && Array.isArray(listData.apps)) {
+        await addAppsToList(listId, listData.apps);
+      }
+      await addListToCollection(collectionId, listId);
+    }
+  }
+
+  return collectionId;
 }

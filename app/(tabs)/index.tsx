@@ -149,7 +149,6 @@ export default function AppsScreen() {
         data={filteredApps}
         renderItem={renderItem}
         keyExtractor={(item) => item.packageName}
-        estimatedItemSize={80}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

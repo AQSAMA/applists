@@ -1,3 +1,5 @@
+import * as DocumentPicker from 'expo-document-picker';
+import { readAsStringAsync } from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -10,12 +12,12 @@ import {
     Portal,
     Snackbar,
     TextInput,
-    useTheme,
+    useTheme
 } from 'react-native-paper';
 
 import { EmptyState, ListCard, SearchBar } from '@/components/ui';
 import type { AppList } from '@/lib/repository';
-import { createList, deleteList, getAllLists } from '@/lib/repository';
+import { createList, deleteList, getAllLists, importListData } from '@/lib/repository';
 import { useListsStore } from '@/stores';
 
 export default function ListsScreen() {
@@ -30,6 +32,9 @@ export default function ListsScreen() {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [listToDelete, setListToDelete] = useState<AppList | null>(null);
+  const [mergeDialogVisible, setMergeDialogVisible] = useState(false);
+  const [selectedForMerge, setSelectedForMerge] = useState<Set<number>>(new Set());
+  const [mergeTargetId, setMergeTargetId] = useState<number | null>(null);
 
   const loadLists = useCallback(async () => {
     try {
@@ -86,6 +91,60 @@ export default function ListsScreen() {
     setDeleteDialogVisible(true);
   };
 
+  const handleImport = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: 'application/json',
+        copyToCacheDirectory: true,
+      });
+      if (result.canceled || !result.assets?.[0]) return;
+
+      const fileUri = result.assets[0].uri;
+      const content = await readAsStringAsync(fileUri);
+      const data = JSON.parse(content);
+      
+      await importListData(data);
+      await loadLists();
+      setSnackbarMessage('List imported successfully');
+    } catch (error) {
+      console.error('Failed to import list:', error);
+      setSnackbarMessage('Failed to import list. Check file format.');
+    }
+  };
+
+  const handleOpenMerge = () => {
+    setSelectedForMerge(new Set());
+    setMergeTargetId(null);
+    setMergeDialogVisible(true);
+  };
+
+  const toggleMergeSelection = (id: number) => {
+    setSelectedForMerge((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+        if (mergeTargetId === id) setMergeTargetId(null);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleMerge = async () => {
+    if (!mergeTargetId || selectedForMerge.size < 2) return;
+    try {
+      const sourceIds = Array.from(selectedForMerge).filter((id) => id !== mergeTargetId);
+      await mergeLists(sourceIds, mergeTargetId);
+      setMergeDialogVisible(false);
+      await loadLists();
+      setSnackbarMessage(`Merged ${sourceIds.length} list(s) into target`);
+    } catch (error) {
+      console.error('Failed to merge lists:', error);
+      setSnackbarMessage('Failed to merge lists');
+    }
+  };
+
   const filteredLists = searchQuery.trim()
     ? lists.filter(
         (l) =>
@@ -98,6 +157,8 @@ export default function ListsScreen() {
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <Appbar.Header style={{ backgroundColor: theme.colors.surface }}>
         <Appbar.Content title="My Lists" />
+        <Appbar.Action icon="merge" onPress={handleOpenMerge} />
+        <Appbar.Action icon="import" onPress={handleImport} />
       </Appbar.Header>
 
       <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Search lists..." />
@@ -164,6 +225,54 @@ export default function ListsScreen() {
             <Button onPress={() => setDeleteDialogVisible(false)}>Cancel</Button>
             <Button onPress={handleDeleteList} textColor={theme.colors.error}>
               Delete
+            </Button>
+          </Dialog.Actions>
+        </Dialog>
+
+        <Dialog visible={mergeDialogVisible} onDismiss={() => setMergeDialogVisible(false)}>
+          <Dialog.Title>Merge Lists</Dialog.Title>
+          <Dialog.Content>
+            <Text variant="bodyMedium" style={{ marginBottom: 8 }}>
+              Select lists to merge, then choose the target list:
+            </Text>
+            <ScrollView style={{ maxHeight: 300 }}>
+              {lists.map((list) => (
+                <List.Item
+                  key={list.id}
+                  title={list.name}
+                  description={`${list.appCount || 0} apps`}
+                  left={() => (
+                    <Checkbox
+                      status={selectedForMerge.has(list.id) ? 'checked' : 'unchecked'}
+                      onPress={() => toggleMergeSelection(list.id)}
+                    />
+                  )}
+                  right={() =>
+                    selectedForMerge.has(list.id) ? (
+                      <RadioButton
+                        value={list.id.toString()}
+                        status={mergeTargetId === list.id ? 'checked' : 'unchecked'}
+                        onPress={() => setMergeTargetId(list.id)}
+                      />
+                    ) : null
+                  }
+                  onPress={() => toggleMergeSelection(list.id)}
+                />
+              ))}
+            </ScrollView>
+            {selectedForMerge.size >= 2 && !mergeTargetId && (
+              <Text variant="bodySmall" style={{ color: theme.colors.error, marginTop: 8 }}>
+                Select a target list (radio button on the right)
+              </Text>
+            )}
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setMergeDialogVisible(false)}>Cancel</Button>
+            <Button
+              onPress={handleMerge}
+              disabled={selectedForMerge.size < 2 || !mergeTargetId}
+            >
+              Merge
             </Button>
           </Dialog.Actions>
         </Dialog>

@@ -1,22 +1,24 @@
 import { FlashList } from '@shopify/flash-list';
+import { cacheDirectory, writeAsStringAsync } from 'expo-file-system/legacy';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
+import * as Sharing from 'expo-sharing';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Linking, RefreshControl, StyleSheet, View } from 'react-native';
 import type { MD3Theme } from 'react-native-paper';
 import {
-    Appbar,
-    Button,
-    Dialog,
-    Menu,
-    Portal,
-    Snackbar,
-    Text,
-    useTheme
+  Appbar,
+  Button,
+  Dialog,
+  Menu,
+  Portal,
+  Snackbar,
+  Text,
+  useTheme
 } from 'react-native-paper';
 
 import { AppListItem, EmptyState, SearchBar, StatusBadge } from '@/components/ui';
 import type { AppList, ListApp } from '@/lib/repository';
-import { getList, getListApps, removeAppsFromList } from '@/lib/repository';
+import { exportListData, getList, getListApps, removeAppsFromList } from '@/lib/repository';
 import InstalledAppsModule from '@/modules/installed-apps';
 
 export default function ListDetailScreen() {
@@ -114,6 +116,22 @@ export default function ListDetailScreen() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      const data = await exportListData(listId);
+      const fileName = `${list?.name?.replace(/[^a-z0-9]/gi, '_') || 'list'}.json`;
+      const filePath = `${cacheDirectory}${fileName}`;
+      await writeAsStringAsync(filePath, JSON.stringify(data, null, 2));
+      await Sharing.shareAsync(filePath, {
+        mimeType: 'application/json',
+        dialogTitle: `Export ${list?.name || 'List'}`,
+      });
+    } catch (error) {
+      console.error('Failed to export list:', error);
+      setSnackbarMessage('Failed to export list');
+    }
+  };
+
   const clearSelection = () => setSelectedIds(new Set());
 
   const filteredApps = searchQuery.trim()
@@ -160,18 +178,7 @@ export default function ListDetailScreen() {
               <Menu.Item
                 onPress={() => {
                   setMenuVisible(false);
-                  router.push({
-                    pathname: '/add-to-list',
-                    params: { listId: listId.toString() },
-                  });
-                }}
-                title="Add Apps"
-                leadingIcon="plus"
-              />
-              <Menu.Item
-                onPress={() => {
-                  setMenuVisible(false);
-                  // TODO: Export list
+                  handleExport();
                 }}
                 title="Export"
                 leadingIcon="export"
@@ -206,7 +213,6 @@ export default function ListDetailScreen() {
         data={filteredApps}
         renderItem={renderItem}
         keyExtractor={(item) => item.id.toString()}
-        estimatedItemSize={80}
         refreshControl={
           <RefreshControl refreshing={isLoading} onRefresh={loadData} colors={[theme.colors.primary]} />
         }
