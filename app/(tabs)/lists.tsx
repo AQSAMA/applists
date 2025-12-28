@@ -2,7 +2,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { readAsStringAsync } from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import type { MD3Theme } from 'react-native-paper';
 import {
     Appbar,
@@ -194,31 +194,37 @@ export default function ListsScreen() {
       />
 
       <Portal>
-        <Dialog visible={dialogVisible} onDismiss={() => setDialogVisible(false)}>
-          <Dialog.Title>New List</Dialog.Title>
-          <Dialog.Content>
-            <TextInput
-              label="Name"
-              value={newListName}
-              onChangeText={setNewListName}
-              mode="outlined"
-              style={styles.input}
-            />
-            <TextInput
-              label="Description (optional)"
-              value={newListDescription}
-              onChangeText={setNewListDescription}
-              mode="outlined"
-              style={styles.input}
-            />
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setDialogVisible(false)}>Cancel</Button>
-            <Button onPress={handleCreateList} disabled={!newListName.trim()}>
-              Create
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          style={styles.keyboardAvoidingView}
+        >
+          <Dialog visible={dialogVisible} onDismiss={() => setDialogVisible(false)}>
+            <Dialog.Title>New List</Dialog.Title>
+            <Dialog.Content>
+              <TextInput
+                label="Name"
+                value={newListName}
+                onChangeText={setNewListName}
+                mode="outlined"
+                style={styles.input}
+                autoFocus
+              />
+              <TextInput
+                label="Description (optional)"
+                value={newListDescription}
+                onChangeText={setNewListDescription}
+                mode="outlined"
+                style={styles.input}
+              />
+            </Dialog.Content>
+            <Dialog.Actions>
+              <Button onPress={() => setDialogVisible(false)}>Cancel</Button>
+              <Button onPress={handleCreateList} disabled={!newListName.trim()}>
+                Create
+              </Button>
+            </Dialog.Actions>
+          </Dialog>
+        </KeyboardAvoidingView>
 
         <Dialog visible={deleteDialogVisible} onDismiss={() => setDeleteDialogVisible(false)}>
           <Dialog.Title>Delete List</Dialog.Title>
@@ -303,5 +309,9 @@ const styles = StyleSheet.create({
   },
   input: {
     marginBottom: 12,
+  },
+  keyboardAvoidingView: {
+    flex: 1,
+    justifyContent: 'center',
   },
 });

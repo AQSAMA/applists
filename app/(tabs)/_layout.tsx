@@ -17,10 +17,7 @@ export default function TabLayout() {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.outlineVariant,
         },
-        headerStyle: {
-          backgroundColor: theme.colors.surface,
-        },
-        headerTintColor: theme.colors.onSurface,
+        headerShown: false,
         tabBarButton: HapticTab,
       }}
     >

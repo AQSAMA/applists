@@ -5,7 +5,24 @@ Build an Android "App List Manager" using Expo React Native with Material Design
 
 ---
 
-## Todo Items
+## Bug Fixes (December 28, 2025)
+
+### Completed Fixes
+
+- [x] **Can't add apps to a list**: Created `app/add-to-list.tsx` modal screen
+- [x] **Can't add lists to collection**: Replaced problematic FAB+Menu with Dialog in collection detail
+- [x] **Large empty space at top**: Set `headerShown: false` in tab layout (removed double headers)
+- [x] **Dialog covered by keyboard**: Added KeyboardAvoidingView wrapper to dialogs
+- [x] **Dark mode toggle doesn't work**: Created theme store with persistence, added theme selection radio buttons
+- [x] **Side menus stop working**: Simplified SortMenu by replacing Switch with Menu.Item
+- [x] **APK size too large**: Added release optimizations to eas.json preview profile
+
+### Notes on APK Size
+The preview build now uses `gradleCommand: ":app:assembleRelease"` which should significantly reduce APK size. The development build includes many debug tools that inflate the size.
+
+---
+
+## Original Todo Items
 
 ### 1. Install Dependencies
 - [x] Add react-native-paper (Material Design 3)
