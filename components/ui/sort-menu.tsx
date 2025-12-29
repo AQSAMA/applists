@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import type { MD3Theme } from 'react-native-paper';
 import { Divider, IconButton, Menu, Switch, Text, useTheme } from 'react-native-paper';
@@ -23,8 +23,8 @@ export function SortMenu({ currentSort, isReversed, onSortChange, onReverseToggl
   const [visible, setVisible] = useState(false);
   const theme = useTheme<MD3Theme>();
 
-  const openMenu = () => setVisible(true);
-  const closeMenu = () => setVisible(false);
+  const openMenu = useCallback(() => setVisible(true), []);
+  const closeMenu = useCallback(() => setVisible(false), []);
 
   const handleSortSelect = (value: SortField) => {
     onSortChange(value);
@@ -32,33 +32,35 @@ export function SortMenu({ currentSort, isReversed, onSortChange, onReverseToggl
   };
 
   return (
-    <Menu
-      visible={visible}
-      onDismiss={closeMenu}
-      anchor={
-        <IconButton
-          icon="sort"
-          onPress={openMenu}
-        />
-      }
-      contentStyle={styles.menuContent}
-    >
-      {sortOptions.map((option) => (
-        <Menu.Item
-          key={option.value}
-          onPress={() => handleSortSelect(option.value)}
-          title={option.label}
-          leadingIcon={currentSort === option.value ? 'check' : undefined}
-        />
-      ))}
-      <Divider />
-      <View style={styles.reverseRow}>
-        <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
-          Reverse Order
-        </Text>
-        <Switch value={isReversed} onValueChange={onReverseToggle} />
-      </View>
-    </Menu>
+    <View>
+      <Menu
+        visible={visible}
+        onDismiss={closeMenu}
+        anchor={
+          <IconButton
+            icon="sort"
+            onPress={openMenu}
+          />
+        }
+        contentStyle={styles.menuContent}
+      >
+        {sortOptions.map((option) => (
+          <Menu.Item
+            key={option.value}
+            onPress={() => handleSortSelect(option.value)}
+            title={option.label}
+            leadingIcon={currentSort === option.value ? 'check' : undefined}
+          />
+        ))}
+        <Divider />
+        <View style={styles.reverseRow}>
+          <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
+            Reverse Order
+          </Text>
+          <Switch value={isReversed} onValueChange={onReverseToggle} />
+        </View>
+      </Menu>
+    </View>
   );
 }
 

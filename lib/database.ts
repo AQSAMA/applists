@@ -89,9 +89,14 @@ async function initializeDatabase(database: SQLite.SQLiteDatabase): Promise<void
     );
 
     -- Create indexes
-    CREATE INDEX IF NOT EXISTS idx_list_apps_list_id ON list_apps(list_id);
     CREATE INDEX IF NOT EXISTS idx_list_apps_package ON list_apps(package_name);
     CREATE INDEX IF NOT EXISTS idx_collection_lists_collection ON collection_lists(collection_id);
+
+    -- KV Store for theme/settings
+    CREATE TABLE IF NOT EXISTS kv_store (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    );
   `);
 }
 

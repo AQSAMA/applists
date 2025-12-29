@@ -3,7 +3,7 @@ import { cacheDirectory, writeAsStringAsync } from 'expo-file-system/legacy';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Linking, RefreshControl, StyleSheet, View } from 'react-native';
+import { Dimensions, Linking, RefreshControl, StyleSheet, View } from 'react-native';
 import type { MD3Theme } from 'react-native-paper';
 import {
   Appbar,
@@ -136,10 +136,10 @@ export default function ListDetailScreen() {
 
   const filteredApps = searchQuery.trim()
     ? apps.filter(
-        (a) =>
-          a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          a.packageName.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      (a) =>
+        a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        a.packageName.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : apps;
 
   const getAppStatus = (app: ListApp & { isInstalled?: boolean }) => {
@@ -170,23 +170,27 @@ export default function ListDetailScreen() {
           headerShown: true,
           title: list?.name || 'List',
           headerRight: () => (
-            <Menu
-              visible={menuVisible}
-              onDismiss={() => setMenuVisible(false)}
-              anchor={<Appbar.Action icon="dots-vertical" onPress={() => setMenuVisible(true)} />}
-            >
-              <Menu.Item
-                onPress={() => {
-                  setMenuVisible(false);
-                  handleExport();
-                }}
-                title="Export"
-                leadingIcon="export"
-              />
-            </Menu>
+            <Appbar.Action icon="dots-vertical" onPress={() => setMenuVisible(true)} />
           ),
         }}
       />
+
+      <Portal>
+        <Menu
+          visible={menuVisible}
+          onDismiss={() => setMenuVisible(false)}
+          anchor={{ x: Dimensions.get('window').width - 10, y: 50 }}
+        >
+          <Menu.Item
+            onPress={() => {
+              setMenuVisible(false);
+              handleExport();
+            }}
+            title="Export"
+            leadingIcon="export"
+          />
+        </Menu>
+      </Portal>
 
       {isSelectionMode && (
         <View style={[styles.selectionBar, { backgroundColor: theme.colors.primaryContainer }]}>

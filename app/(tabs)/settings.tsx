@@ -2,24 +2,26 @@ import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import type { MD3Theme } from 'react-native-paper';
 import {
-    Appbar,
-    Button,
-    Dialog,
-    Divider,
-    List,
-    Portal,
-    Snackbar,
-    Switch,
-    Text,
-    useTheme,
+  Appbar,
+  Button,
+  Dialog,
+  Divider,
+  List,
+  Portal,
+  Snackbar,
+  Switch,
+  Text,
+  useTheme,
 } from 'react-native-paper';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { clearIconCache } from '@/lib/repository';
+import { useThemeStore } from '@/stores/theme-store';
 
 export default function SettingsScreen() {
   const theme = useTheme<MD3Theme>();
   const colorScheme = useColorScheme();
+  const setThemeMode = useThemeStore((state) => state.setThemeMode);
 
   const [clearCacheDialogVisible, setClearCacheDialogVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -48,7 +50,12 @@ export default function SettingsScreen() {
             title="Dark Mode"
             description={colorScheme === 'dark' ? 'On' : 'Off'}
             left={(props) => <List.Icon {...props} icon="theme-light-dark" />}
-            right={() => <Switch value={colorScheme === 'dark'} disabled />}
+            right={() => (
+              <Switch
+                value={colorScheme === 'dark'}
+                onValueChange={(value) => setThemeMode(value ? 'dark' : 'light')}
+              />
+            )}
           />
         </List.Section>
 

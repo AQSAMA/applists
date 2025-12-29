@@ -2,17 +2,17 @@ import * as DocumentPicker from 'expo-document-picker';
 import { readAsStringAsync } from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import type { MD3Theme } from 'react-native-paper';
 import {
-    Appbar,
-    Button,
-    Dialog,
-    FAB,
-    Portal,
-    Snackbar,
-    TextInput,
-    useTheme,
+  Appbar,
+  Button,
+  Dialog,
+  FAB,
+  Portal,
+  Snackbar,
+  TextInput,
+  useTheme,
 } from 'react-native-paper';
 
 import { CollectionCard, EmptyState, SearchBar } from '@/components/ui';
@@ -100,7 +100,7 @@ export default function CollectionsScreen() {
       const fileUri = result.assets[0].uri;
       const content = await readAsStringAsync(fileUri);
       const data = JSON.parse(content);
-      
+
       await importCollectionData(data);
       await loadCollections();
       setSnackbarMessage('Collection imported successfully');
@@ -112,10 +112,10 @@ export default function CollectionsScreen() {
 
   const filteredCollections = searchQuery.trim()
     ? collections.filter(
-        (c) =>
-          c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          c.description?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      (c) =>
+        c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        c.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : collections;
 
   return (
@@ -158,22 +158,25 @@ export default function CollectionsScreen() {
       <Portal>
         <Dialog visible={dialogVisible} onDismiss={() => setDialogVisible(false)}>
           <Dialog.Title>New Collection</Dialog.Title>
-          <Dialog.Content>
-            <TextInput
-              label="Name"
-              value={newName}
-              onChangeText={setNewName}
-              mode="outlined"
-              style={styles.input}
-            />
-            <TextInput
-              label="Description (optional)"
-              value={newDescription}
-              onChangeText={setNewDescription}
-              mode="outlined"
-              style={styles.input}
-            />
-          </Dialog.Content>
+          <Dialog.ScrollArea>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+              <TextInput
+                label="Name"
+                value={newName}
+                onChangeText={setNewName}
+                mode="outlined"
+                style={styles.input}
+                autoFocus
+              />
+              <TextInput
+                label="Description (optional)"
+                value={newDescription}
+                onChangeText={setNewDescription}
+                mode="outlined"
+                style={styles.input}
+              />
+            </KeyboardAvoidingView>
+          </Dialog.ScrollArea>
           <Dialog.Actions>
             <Button onPress={() => setDialogVisible(false)}>Cancel</Button>
             <Button onPress={handleCreate} disabled={!newName.trim()}>

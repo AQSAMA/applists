@@ -2,20 +2,20 @@ import { cacheDirectory, writeAsStringAsync } from 'expo-file-system/legacy';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Dimensions, ScrollView, StyleSheet, View } from 'react-native';
 import type { MD3Theme } from 'react-native-paper';
 import { Appbar, Button, Dialog, Divider, FAB, List, Menu, Portal, Snackbar, Text, useTheme } from 'react-native-paper';
 
 import { EmptyState, ListCard, SearchBar } from '@/components/ui';
 import type { AppList, Collection } from '@/lib/repository';
 import {
-    addListToCollection,
-    exportCollectionData,
-    findDuplicatesInCollection,
-    getAllLists,
-    getCollection,
-    getCollectionLists,
-    removeListFromCollection,
+  addListToCollection,
+  exportCollectionData,
+  findDuplicatesInCollection,
+  getAllLists,
+  getCollection,
+  getCollectionLists,
+  removeListFromCollection,
 } from '@/lib/repository';
 
 export default function CollectionDetailScreen() {
@@ -106,12 +106,12 @@ export default function CollectionDetailScreen() {
     try {
       const duplicateMap = await findDuplicatesInCollection(collectionId);
       const listNameMap = new Map(lists.map((l) => [l.id, l.name]));
-      
+
       const duplicateList = Array.from(duplicateMap.entries()).map(([packageName, listIds]) => ({
         packageName,
         listNames: listIds.map((id) => listNameMap.get(id) || `List ${id}`),
       }));
-      
+
       setDuplicates(duplicateList);
       setDuplicatesDialogVisible(true);
     } catch (error) {
@@ -122,10 +122,10 @@ export default function CollectionDetailScreen() {
 
   const filteredLists = searchQuery.trim()
     ? lists.filter(
-        (l) =>
-          l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          l.description?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      (l) =>
+        l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        l.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : lists;
 
   const availableLists = allLists.filter((l) => !lists.some((cl) => cl.id === l.id));
@@ -137,28 +137,7 @@ export default function CollectionDetailScreen() {
           headerShown: true,
           title: collection?.name || 'Collection',
           headerRight: () => (
-            <Menu
-              visible={menuVisible}
-              onDismiss={() => setMenuVisible(false)}
-              anchor={<Appbar.Action icon="dots-vertical" onPress={() => setMenuVisible(true)} />}
-            >
-              <Menu.Item
-                onPress={() => {
-                  setMenuVisible(false);
-                  handleExport();
-                }}
-                title="Export"
-                leadingIcon="export"
-              />
-              <Menu.Item
-                onPress={() => {
-                  setMenuVisible(false);
-                  handleCheckDuplicates();
-                }}
-                title="Check Duplicates"
-                leadingIcon="content-duplicate"
-              />
-            </Menu>
+            <Appbar.Action icon="dots-vertical" onPress={() => setMenuVisible(true)} />
           ),
         }}
       />
@@ -190,27 +169,54 @@ export default function CollectionDetailScreen() {
         </ScrollView>
       )}
 
-      <Menu
-        visible={addMenuVisible}
-        onDismiss={() => setAddMenuVisible(false)}
-        anchor={
-          <FAB
-            icon="plus"
-            onPress={() => setAddMenuVisible(true)}
-            style={[styles.fab, { backgroundColor: theme.colors.primaryContainer }]}
-            color={theme.colors.onPrimaryContainer}
+      <FAB
+        icon="plus"
+        onPress={() => setAddMenuVisible(true)}
+        style={[styles.fab, { backgroundColor: theme.colors.primaryContainer }]}
+        color={theme.colors.onPrimaryContainer}
+      />
+
+      <Portal>
+        <Menu
+          visible={addMenuVisible}
+          onDismiss={() => setAddMenuVisible(false)}
+          anchor={{ x: Dimensions.get('window').width - 16, y: Dimensions.get('window').height - 80 }}
+          anchorPosition="top"
+        >
+          {availableLists.length === 0 ? (
+            <Menu.Item title="No available lists" disabled />
+          ) : (
+            availableLists.map((list) => (
+              <Menu.Item key={list.id} onPress={() => handleAddList(list.id)} title={list.name} />
+            ))
+          )}
+        </Menu>
+      </Portal>
+
+      <Portal>
+        <Menu
+          visible={menuVisible}
+          onDismiss={() => setMenuVisible(false)}
+          anchor={{ x: Dimensions.get('window').width - 10, y: 50 }}
+        >
+          <Menu.Item
+            onPress={() => {
+              setMenuVisible(false);
+              handleExport();
+            }}
+            title="Export"
+            leadingIcon="export"
           />
-        }
-        anchorPosition="top"
-      >
-        {availableLists.length === 0 ? (
-          <Menu.Item title="No available lists" disabled />
-        ) : (
-          availableLists.map((list) => (
-            <Menu.Item key={list.id} onPress={() => handleAddList(list.id)} title={list.name} />
-          ))
-        )}
-      </Menu>
+          <Menu.Item
+            onPress={() => {
+              setMenuVisible(false);
+              handleCheckDuplicates();
+            }}
+            title="Check Duplicates"
+            leadingIcon="content-duplicate"
+          />
+        </Menu>
+      </Portal>
 
       <Portal>
         <Dialog visible={duplicatesDialogVisible} onDismiss={() => setDuplicatesDialogVisible(false)}>

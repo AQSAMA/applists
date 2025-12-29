@@ -1,4 +1,4 @@
-import * as SQLite from 'expo-sqlite';
+import { getDatabase } from '@/lib/database';
 import { Appearance } from 'react-native';
 import { create } from 'zustand';
 import { createJSONStorage, persist, StateStorage } from 'zustand/middleware';
@@ -15,13 +15,7 @@ interface ThemeState {
 const sqliteStorage: StateStorage = {
   getItem: async (name: string): Promise<string | null> => {
     try {
-      const db = await SQLite.openDatabaseAsync('applists.db');
-      await db.execAsync(`
-        CREATE TABLE IF NOT EXISTS kv_store (
-          key TEXT PRIMARY KEY,
-          value TEXT
-        )
-      `);
+      const db = await getDatabase();
       const result = await db.getFirstAsync<{ value: string }>(
         'SELECT value FROM kv_store WHERE key = ?',
         [name]
@@ -33,7 +27,7 @@ const sqliteStorage: StateStorage = {
   },
   setItem: async (name: string, value: string): Promise<void> => {
     try {
-      const db = await SQLite.openDatabaseAsync('applists.db');
+      const db = await getDatabase();
       await db.runAsync(
         'INSERT OR REPLACE INTO kv_store (key, value) VALUES (?, ?)',
         [name, value]
@@ -44,7 +38,7 @@ const sqliteStorage: StateStorage = {
   },
   removeItem: async (name: string): Promise<void> => {
     try {
-      const db = await SQLite.openDatabaseAsync('applists.db');
+      const db = await getDatabase();
       await db.runAsync('DELETE FROM kv_store WHERE key = ?', [name]);
     } catch {
       // Ignore errors
@@ -56,9 +50,9 @@ export const useThemeStore = create<ThemeState>()(
   persist(
     (set, get) => ({
       themeMode: 'system',
-      
+
       setThemeMode: (themeMode) => set({ themeMode }),
-      
+
       getEffectiveColorScheme: () => {
         const { themeMode } = get();
         if (themeMode === 'system') {

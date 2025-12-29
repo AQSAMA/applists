@@ -2,26 +2,26 @@ import * as DocumentPicker from 'expo-document-picker';
 import { readAsStringAsync } from 'expo-file-system/legacy';
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
 import type { MD3Theme } from 'react-native-paper';
 import {
-    Appbar,
-    Button,
-    Checkbox,
-    Dialog,
-    FAB,
-    List,
-    Portal,
-    RadioButton,
-    Snackbar,
-    Text,
-    TextInput,
-    useTheme
+  Appbar,
+  Button,
+  Checkbox,
+  Dialog,
+  FAB,
+  List,
+  Portal,
+  RadioButton,
+  Snackbar,
+  Text,
+  TextInput,
+  useTheme
 } from 'react-native-paper';
 
 import { EmptyState, ListCard, SearchBar } from '@/components/ui';
 import type { AppList } from '@/lib/repository';
-import { createList, deleteList, getAllLists, importListData } from '@/lib/repository';
+import { createList, deleteList, getAllLists, importListData, mergeLists } from '@/lib/repository';
 import { useListsStore } from '@/stores';
 
 export default function ListsScreen() {
@@ -106,7 +106,7 @@ export default function ListsScreen() {
       const fileUri = result.assets[0].uri;
       const content = await readAsStringAsync(fileUri);
       const data = JSON.parse(content);
-      
+
       await importListData(data);
       await loadLists();
       setSnackbarMessage('List imported successfully');
@@ -151,10 +151,10 @@ export default function ListsScreen() {
 
   const filteredLists = searchQuery.trim()
     ? lists.filter(
-        (l) =>
-          l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          l.description?.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      (l) =>
+        l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        l.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    )
     : lists;
 
   return (
@@ -196,22 +196,25 @@ export default function ListsScreen() {
       <Portal>
         <Dialog visible={dialogVisible} onDismiss={() => setDialogVisible(false)}>
           <Dialog.Title>New List</Dialog.Title>
-          <Dialog.Content>
-            <TextInput
-              label="Name"
-              value={newListName}
-              onChangeText={setNewListName}
-              mode="outlined"
-              style={styles.input}
-            />
-            <TextInput
-              label="Description (optional)"
-              value={newListDescription}
-              onChangeText={setNewListDescription}
-              mode="outlined"
-              style={styles.input}
-            />
-          </Dialog.Content>
+          <Dialog.ScrollArea>
+            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+              <TextInput
+                label="Name"
+                value={newListName}
+                onChangeText={setNewListName}
+                mode="outlined"
+                style={styles.input}
+                autoFocus
+              />
+              <TextInput
+                label="Description (optional)"
+                value={newListDescription}
+                onChangeText={setNewListDescription}
+                mode="outlined"
+                style={styles.input}
+              />
+            </KeyboardAvoidingView>
+          </Dialog.ScrollArea>
           <Dialog.Actions>
             <Button onPress={() => setDialogVisible(false)}>Cancel</Button>
             <Button onPress={handleCreateList} disabled={!newListName.trim()}>
