@@ -1,0 +1,14 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /home/ahmed/1dev/applists/applists/modules/installed-apps/android/src/main/AndroidManifest.xml:1:1-2:12
+INJECTED from /home/ahmed/1dev/applists/applists/modules/installed-apps/android/src/main/AndroidManifest.xml:1:1-2:12
+	package
+		INJECTED from /home/ahmed/1dev/applists/applists/modules/installed-apps/android/src/main/AndroidManifest.xml
+uses-sdk
+INJECTED from /home/ahmed/1dev/applists/applists/modules/installed-apps/android/src/main/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /home/ahmed/1dev/applists/applists/modules/installed-apps/android/src/main/AndroidManifest.xml
+INJECTED from /home/ahmed/1dev/applists/applists/modules/installed-apps/android/src/main/AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from /home/ahmed/1dev/applists/applists/modules/installed-apps/android/src/main/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /home/ahmed/1dev/applists/applists/modules/installed-apps/android/src/main/AndroidManifest.xml

@@ -1,9 +1,15 @@
-import * as DocumentPicker from 'expo-document-picker';
-import { readAsStringAsync } from 'expo-file-system/legacy';
-import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import type { MD3Theme } from 'react-native-paper';
+import * as DocumentPicker from "expo-document-picker";
+import { readAsStringAsync } from "expo-file-system/legacy";
+import { useRouter } from "expo-router";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
+import type { MD3Theme } from "react-native-paper";
 import {
   Appbar,
   Button,
@@ -16,28 +22,43 @@ import {
   Snackbar,
   Text,
   TextInput,
-  useTheme
-} from 'react-native-paper';
+  useTheme,
+} from "react-native-paper";
 
-import { EmptyState, ListCard, SearchBar } from '@/components/ui';
-import type { AppList } from '@/lib/repository';
-import { createList, deleteList, getAllLists, importListData, mergeLists } from '@/lib/repository';
-import { useListsStore } from '@/stores';
+import { EmptyState, ListCard, SearchBar } from "@/components/ui";
+import type { AppList } from "@/lib/repository";
+import {
+  createList,
+  deleteList,
+  getAllLists,
+  importListData,
+  mergeLists,
+} from "@/lib/repository";
+import { useListsStore } from "@/stores";
 
 export default function ListsScreen() {
   const theme = useTheme<MD3Theme>();
   const router = useRouter();
 
-  const { lists, setLists, isLoading, setLoading, searchQuery, setSearchQuery } = useListsStore();
+  const {
+    lists,
+    setLists,
+    isLoading,
+    setLoading,
+    searchQuery,
+    setSearchQuery,
+  } = useListsStore();
 
   const [dialogVisible, setDialogVisible] = useState(false);
-  const [newListName, setNewListName] = useState('');
-  const [newListDescription, setNewListDescription] = useState('');
-  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [newListName, setNewListName] = useState("");
+  const [newListDescription, setNewListDescription] = useState("");
+  const [snackbarMessage, setSnackbarMessage] = useState("");
   const [deleteDialogVisible, setDeleteDialogVisible] = useState(false);
   const [listToDelete, setListToDelete] = useState<AppList | null>(null);
   const [mergeDialogVisible, setMergeDialogVisible] = useState(false);
-  const [selectedForMerge, setSelectedForMerge] = useState<Set<number>>(new Set());
+  const [selectedForMerge, setSelectedForMerge] = useState<Set<number>>(
+    new Set(),
+  );
   const [mergeTargetId, setMergeTargetId] = useState<number | null>(null);
 
   const loadLists = useCallback(async () => {
@@ -46,8 +67,8 @@ export default function ListsScreen() {
       const allLists = await getAllLists();
       setLists(allLists);
     } catch (error) {
-      console.error('Failed to load lists:', error);
-      setSnackbarMessage('Failed to load lists');
+      console.error("Failed to load lists:", error);
+      setSnackbarMessage("Failed to load lists");
     } finally {
       setLoading(false);
     }
@@ -60,15 +81,18 @@ export default function ListsScreen() {
   const handleCreateList = async () => {
     if (!newListName.trim()) return;
     try {
-      await createList(newListName.trim(), newListDescription.trim() || undefined);
+      await createList(
+        newListName.trim(),
+        newListDescription.trim() || undefined,
+      );
       setDialogVisible(false);
-      setNewListName('');
-      setNewListDescription('');
+      setNewListName("");
+      setNewListDescription("");
       await loadLists();
-      setSnackbarMessage('List created');
+      setSnackbarMessage("List created");
     } catch (error) {
-      console.error('Failed to create list:', error);
-      setSnackbarMessage('Failed to create list');
+      console.error("Failed to create list:", error);
+      setSnackbarMessage("Failed to create list");
     }
   };
 
@@ -79,10 +103,10 @@ export default function ListsScreen() {
       setDeleteDialogVisible(false);
       setListToDelete(null);
       await loadLists();
-      setSnackbarMessage('List deleted');
+      setSnackbarMessage("List deleted");
     } catch (error) {
-      console.error('Failed to delete list:', error);
-      setSnackbarMessage('Failed to delete list');
+      console.error("Failed to delete list:", error);
+      setSnackbarMessage("Failed to delete list");
     }
   };
 
@@ -98,7 +122,7 @@ export default function ListsScreen() {
   const handleImport = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: 'application/json',
+        type: "application/json",
         copyToCacheDirectory: true,
       });
       if (result.canceled || !result.assets?.[0]) return;
@@ -109,10 +133,10 @@ export default function ListsScreen() {
 
       await importListData(data);
       await loadLists();
-      setSnackbarMessage('List imported successfully');
+      setSnackbarMessage("List imported successfully");
     } catch (error) {
-      console.error('Failed to import list:', error);
-      setSnackbarMessage('Failed to import list. Check file format.');
+      console.error("Failed to import list:", error);
+      setSnackbarMessage("Failed to import list. Check file format.");
     }
   };
 
@@ -138,40 +162,52 @@ export default function ListsScreen() {
   const handleMerge = async () => {
     if (!mergeTargetId || selectedForMerge.size < 2) return;
     try {
-      const sourceIds = Array.from(selectedForMerge).filter((id) => id !== mergeTargetId);
+      const sourceIds = Array.from(selectedForMerge).filter(
+        (id) => id !== mergeTargetId,
+      );
       await mergeLists(sourceIds, mergeTargetId);
       setMergeDialogVisible(false);
       await loadLists();
       setSnackbarMessage(`Merged ${sourceIds.length} list(s) into target`);
     } catch (error) {
-      console.error('Failed to merge lists:', error);
-      setSnackbarMessage('Failed to merge lists');
+      console.error("Failed to merge lists:", error);
+      setSnackbarMessage("Failed to merge lists");
     }
   };
 
   const filteredLists = searchQuery.trim()
     ? lists.filter(
-      (l) =>
-        l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        l.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    )
+        (l) =>
+          l.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          l.description?.toLowerCase().includes(searchQuery.toLowerCase()),
+      )
     : lists;
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <Appbar.Header style={{ backgroundColor: theme.colors.surface }}>
         <Appbar.Content title="My Lists" />
         <Appbar.Action icon="merge" onPress={handleOpenMerge} />
         <Appbar.Action icon="import" onPress={handleImport} />
       </Appbar.Header>
 
-      <SearchBar value={searchQuery} onChangeText={setSearchQuery} placeholder="Search lists..." />
+      <SearchBar
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+        placeholder="Search lists..."
+      />
 
       {filteredLists.length === 0 ? (
         <EmptyState
           icon="format-list-bulleted"
-          title={searchQuery ? 'No lists found' : 'No lists yet'}
-          description={searchQuery ? 'Try a different search' : 'Create a list to organize your apps'}
+          title={searchQuery ? "No lists found" : "No lists yet"}
+          description={
+            searchQuery
+              ? "Try a different search"
+              : "Create a list to organize your apps"
+          }
         />
       ) : (
         <ScrollView contentContainerStyle={styles.listContainer}>
@@ -194,10 +230,15 @@ export default function ListsScreen() {
       />
 
       <Portal>
-        <Dialog visible={dialogVisible} onDismiss={() => setDialogVisible(false)}>
+        <Dialog
+          visible={dialogVisible}
+          onDismiss={() => setDialogVisible(false)}
+        >
           <Dialog.Title>New List</Dialog.Title>
           <Dialog.ScrollArea>
-            <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === "ios" ? "padding" : undefined}
+            >
               <TextInput
                 label="Name"
                 value={newListName}
@@ -223,20 +264,31 @@ export default function ListsScreen() {
           </Dialog.Actions>
         </Dialog>
 
-        <Dialog visible={deleteDialogVisible} onDismiss={() => setDeleteDialogVisible(false)}>
+        <Dialog
+          visible={deleteDialogVisible}
+          onDismiss={() => setDeleteDialogVisible(false)}
+        >
           <Dialog.Title>Delete List</Dialog.Title>
           <Dialog.Content>
-            <Button>Are you sure you want to delete "{listToDelete?.name}"?</Button>
+            <Text>
+              Are you sure you want to delete &ldquo;{listToDelete?.name}
+              &rdquo;?
+            </Text>
           </Dialog.Content>
           <Dialog.Actions>
-            <Button onPress={() => setDeleteDialogVisible(false)}>Cancel</Button>
+            <Button onPress={() => setDeleteDialogVisible(false)}>
+              Cancel
+            </Button>
             <Button onPress={handleDeleteList} textColor={theme.colors.error}>
               Delete
             </Button>
           </Dialog.Actions>
         </Dialog>
 
-        <Dialog visible={mergeDialogVisible} onDismiss={() => setMergeDialogVisible(false)}>
+        <Dialog
+          visible={mergeDialogVisible}
+          onDismiss={() => setMergeDialogVisible(false)}
+        >
           <Dialog.Title>Merge Lists</Dialog.Title>
           <Dialog.Content>
             <Text variant="bodyMedium" style={{ marginBottom: 8 }}>
@@ -250,7 +302,9 @@ export default function ListsScreen() {
                   description={`${list.appCount || 0} apps`}
                   left={() => (
                     <Checkbox
-                      status={selectedForMerge.has(list.id) ? 'checked' : 'unchecked'}
+                      status={
+                        selectedForMerge.has(list.id) ? "checked" : "unchecked"
+                      }
                       onPress={() => toggleMergeSelection(list.id)}
                     />
                   )}
@@ -258,7 +312,9 @@ export default function ListsScreen() {
                     selectedForMerge.has(list.id) ? (
                       <RadioButton
                         value={list.id.toString()}
-                        status={mergeTargetId === list.id ? 'checked' : 'unchecked'}
+                        status={
+                          mergeTargetId === list.id ? "checked" : "unchecked"
+                        }
                         onPress={() => setMergeTargetId(list.id)}
                       />
                     ) : null
@@ -268,7 +324,10 @@ export default function ListsScreen() {
               ))}
             </ScrollView>
             {selectedForMerge.size >= 2 && !mergeTargetId && (
-              <Text variant="bodySmall" style={{ color: theme.colors.error, marginTop: 8 }}>
+              <Text
+                variant="bodySmall"
+                style={{ color: theme.colors.error, marginTop: 8 }}
+              >
                 Select a target list (radio button on the right)
               </Text>
             )}
@@ -285,7 +344,11 @@ export default function ListsScreen() {
         </Dialog>
       </Portal>
 
-      <Snackbar visible={!!snackbarMessage} onDismiss={() => setSnackbarMessage('')} duration={3000}>
+      <Snackbar
+        visible={!!snackbarMessage}
+        onDismiss={() => setSnackbarMessage("")}
+        duration={3000}
+      >
         {snackbarMessage}
       </Snackbar>
     </View>
@@ -300,7 +363,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   fab: {
-    position: 'absolute',
+    position: "absolute",
     right: 16,
     bottom: 16,
   },

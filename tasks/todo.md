@@ -5,6 +5,82 @@ Build an Android "App List Manager" using Expo React Native with Material Design
 
 ---
 
+## Bug Fixes (Current Task - Pop-up Menu & Collection Behavior)
+
+### Problem 1: Pop-up menus only work once
+Pop-up menus (like the sorting menu) only function once; clicking them a second time disables them.
+
+### Problem 2: Sort menu appears on wrong side
+The sorting menu appears on the left instead of right side of the screen.
+
+### Problem 3: Long-press removes lists from collections
+Long-pressing a list in a collection removes it - this should not happen.
+
+### Problem 4: Deleting a list removes it from collections
+When a list is deleted from the Lists menu, it's also removed from collections due to CASCADE. User wants lists to persist in collections independently.
+
+### Fix Plan
+
+- [x] **1. Fix SortMenu component** - Wrap Menu in Portal (like all other menus in the app)
+- [x] **2. Fix dialog text** - Delete confirmation dialogs use `<Button>` instead of `<Text>`
+- [x] **3. Fix SortMenu positioning** - Menu should appear on right side, anchored to button
+- [x] **4. Remove long-press delete from collection detail** - Remove onLongPress handler from ListCard in collection/[id].tsx
+- [x] **5. Change database CASCADE behavior** - Store list data directly in collection_lists table so collections persist independently
+- [x] **6. Test and verify**
+
+### Bug Fixes (Session 3)
+
+#### Problems
+1. Long-press on list in collection should show option to remove (with confirmation)
+2. Dark/light mode toggle doesn't work - theme doesn't update reactively
+3. Any other necessary fixes
+
+#### Fix Plan
+- [x] **1. Add long-press removal with confirmation dialog** - In collection/[id].tsx, add dialog to confirm removing list from collection
+- [x] **2. Fix theme reactivity** - The useColorScheme hook doesn't trigger re-renders because getEffectiveColorScheme is not reactive. Need to make the theme store properly reactive.
+- [x] **3. Review and fix any other issues**
+
+### Changes Made (Bug Fix Session 3)
+
+1. **`stores/theme-store.ts`** - Fixed theme reactivity:
+   - Changed from using a `getEffectiveColorScheme()` function to storing `effectiveColorScheme` as reactive state
+   - Added `initializeTheme()` function that sets up a listener for system theme changes
+   - Added `onRehydrateStorage` to compute effective color scheme after state rehydration
+   - Theme changes now properly trigger re-renders
+
+2. **`hooks/use-color-scheme.ts`** - Updated to use the reactive `effectiveColorScheme` state instead of calling a function, and calls `initializeTheme()` on mount
+
+3. **`app/collection/[id].tsx`** - Added long-press removal with confirmation:
+   - Added `removeDialogVisible` and `listToRemove` state
+   - Added `handleListLongPress` to show confirmation dialog
+   - Added `handleRemoveList` to perform the removal
+   - Added confirmation dialog with explanation that the list itself won't be deleted
+   - Re-added `onLongPress` handler to ListCard components
+   - Re-added `removeListFromCollection` import
+
+### Changes Made (Bug Fix Session 1)
+
+1. **`components/ui/sort-menu.tsx`** - Wrapped `Menu` component in `Portal` to fix the one-time click bug. The `IconButton` is now a sibling to `Portal` instead of being the anchor child of Menu.
+
+2. **`app/(tabs)/lists.tsx`** - Changed `<Button>` to `<Text>` in the delete confirmation dialog content.
+
+3. **`app/(tabs)/collections.tsx`** - Added missing `Text` import from react-native-paper and changed `<Button>` to `<Text>` in the delete confirmation dialog content.
+
+### Changes Made (Bug Fix Session 2)
+
+1. **`components/ui/sort-menu.tsx`** - Fixed positioning by using `measureInWindow` on a ref to get the button's actual position, then anchoring the Portal-wrapped Menu to that position. Menu now appears on the right side near the button.
+
+2. **`app/collection/[id].tsx`** - Removed `onLongPress` handler from `ListCard` component so lists are no longer accidentally removed from collections. Also removed the now-unused `handleRemoveList` function and `removeListFromCollection` import.
+
+3. **`lib/database.ts`** - Updated schema to:
+   - Add `list_name` and `list_description` columns to `collection_lists` table
+   - Make `list_id` nullable (no longer has CASCADE delete)
+   - Added migration logic (v2) to migrate existing data from old schema
+
+4. **`lib/repository.ts`** - Updated `addListToCollection` to store list name/description directly in collection_lists. Updated `getCollectionLists` to use stored list_name/list_description, falling back gracefully if the original list was deleted.
+
+---
+
 ## Todo Items
 
 ### 1. Install Dependencies

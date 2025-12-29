@@ -372,6 +372,17 @@ export async function addListToCollection(
   listId: number,
 ): Promise<void> {
   const db = await getDatabase();
+
+  // Get list details to store in collection_lists
+  const list = await db.getFirstAsync<{
+    name: string;
+    description: string | null;
+  }>("SELECT name, description FROM lists WHERE id = ?", [listId]);
+
+  if (!list) {
+    throw new Error("List not found");
+  }
+
   const maxPos = await db.getFirstAsync<{ max_pos: number | null }>(
     "SELECT MAX(position) as max_pos FROM collection_lists WHERE collection_id = ?",
     [collectionId],
@@ -379,8 +390,8 @@ export async function addListToCollection(
   const position = (maxPos?.max_pos ?? -1) + 1;
 
   await db.runAsync(
-    "INSERT OR IGNORE INTO collection_lists (collection_id, list_id, position) VALUES (?, ?, ?)",
-    [collectionId, listId, position],
+    "INSERT OR IGNORE INTO collection_lists (collection_id, list_id, list_name, list_description, position) VALUES (?, ?, ?, ?, ?)",
+    [collectionId, listId, list.name, list.description, position],
   );
   await db.runAsync("UPDATE collections SET updated_at = ? WHERE id = ?", [
     Date.now(),
@@ -407,32 +418,44 @@ export async function getCollectionLists(
   collectionId: number,
 ): Promise<AppList[]> {
   const db = await getDatabase();
+  // Query collection_lists and join with lists if available
+  // If list was deleted, use stored list_name/list_description
   const rows = await db.getAllAsync<{
-    id: number;
-    name: string;
-    description: string | null;
-    created_at: number;
-    updated_at: number;
+    list_id: number | null;
+    list_name: string;
+    list_description: string | null;
+    id: number | null;
+    created_at: number | null;
+    updated_at: number | null;
     app_count: number;
+    position: number;
   }>(
     `
-    SELECT l.*, COUNT(la.id) as app_count
-    FROM lists l
-    INNER JOIN collection_lists cl ON l.id = cl.list_id
+    SELECT
+      cl.list_id,
+      cl.list_name,
+      cl.list_description,
+      l.id,
+      l.created_at,
+      l.updated_at,
+      COALESCE(COUNT(la.id), 0) as app_count,
+      cl.position
+    FROM collection_lists cl
+    LEFT JOIN lists l ON cl.list_id = l.id
     LEFT JOIN list_apps la ON l.id = la.list_id
     WHERE cl.collection_id = ?
-    GROUP BY l.id
+    GROUP BY cl.list_id, cl.list_name
     ORDER BY cl.position ASC
   `,
     [collectionId],
   );
 
   return rows.map((row) => ({
-    id: row.id,
-    name: row.name,
-    description: row.description,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    id: row.list_id ?? -1, // Use -1 for deleted lists
+    name: row.list_name,
+    description: row.list_description,
+    createdAt: row.created_at ?? 0,
+    updatedAt: row.updated_at ?? 0,
     appCount: row.app_count,
   }));
 }
