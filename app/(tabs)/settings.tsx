@@ -8,19 +8,18 @@ import {
     Divider,
     List,
     Portal,
-    RadioButton,
     Snackbar,
+    Switch,
     Text,
     useTheme,
 } from 'react-native-paper';
 
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { clearIconCache } from '@/lib/repository';
-import { useThemeStore } from '@/stores';
 
 export default function SettingsScreen() {
   const theme = useTheme<MD3Theme>();
-  const { themeMode, setThemeMode, getEffectiveColorScheme } = useThemeStore();
-  const effectiveScheme = getEffectiveColorScheme();
+  const colorScheme = useColorScheme();
 
   const [clearCacheDialogVisible, setClearCacheDialogVisible] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -46,41 +45,10 @@ export default function SettingsScreen() {
         <List.Section>
           <List.Subheader>Appearance</List.Subheader>
           <List.Item
-            title="System Default"
-            description="Follow system settings"
-            left={(props) => <List.Icon {...props} icon="cellphone" />}
-            right={() => (
-              <RadioButton
-                value="system"
-                status={themeMode === 'system' ? 'checked' : 'unchecked'}
-                onPress={() => setThemeMode('system')}
-              />
-            )}
-            onPress={() => setThemeMode('system')}
-          />
-          <List.Item
-            title="Light Mode"
-            left={(props) => <List.Icon {...props} icon="white-balance-sunny" />}
-            right={() => (
-              <RadioButton
-                value="light"
-                status={themeMode === 'light' ? 'checked' : 'unchecked'}
-                onPress={() => setThemeMode('light')}
-              />
-            )}
-            onPress={() => setThemeMode('light')}
-          />
-          <List.Item
             title="Dark Mode"
-            left={(props) => <List.Icon {...props} icon="moon-waning-crescent" />}
-            right={() => (
-              <RadioButton
-                value="dark"
-                status={themeMode === 'dark' ? 'checked' : 'unchecked'}
-                onPress={() => setThemeMode('dark')}
-              />
-            )}
-            onPress={() => setThemeMode('dark')}
+            description={colorScheme === 'dark' ? 'On' : 'Off'}
+            left={(props) => <List.Icon {...props} icon="theme-light-dark" />}
+            right={() => <Switch value={colorScheme === 'dark'} disabled />}
           />
         </List.Section>
 

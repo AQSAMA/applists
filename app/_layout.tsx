@@ -1,36 +1,17 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
-import { Appearance } from 'react-native';
 import { PaperProvider } from 'react-native-paper';
 import 'react-native-reanimated';
 
 import { DarkTheme, LightTheme } from '@/constants/paper-theme';
-import { useThemeStore } from '@/stores';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export const unstable_settings = {
   anchor: '(tabs)',
 };
 
 export default function RootLayout() {
-  const { themeMode, getEffectiveColorScheme } = useThemeStore();
-  const [colorScheme, setColorScheme] = useState(getEffectiveColorScheme());
-
-  useEffect(() => {
-    // Update when themeMode changes
-    setColorScheme(getEffectiveColorScheme());
-  }, [themeMode, getEffectiveColorScheme]);
-
-  useEffect(() => {
-    // Listen to system appearance changes when in 'system' mode
-    const subscription = Appearance.addChangeListener(() => {
-      if (themeMode === 'system') {
-        setColorScheme(getEffectiveColorScheme());
-      }
-    });
-    return () => subscription.remove();
-  }, [themeMode, getEffectiveColorScheme]);
-
+  const colorScheme = useColorScheme();
   const theme = colorScheme === 'dark' ? DarkTheme : LightTheme;
 
   return (

@@ -31,7 +31,7 @@ export default function CollectionDetailScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [menuVisible, setMenuVisible] = useState(false);
-  const [addDialogVisible, setAddDialogVisible] = useState(false);
+  const [addMenuVisible, setAddMenuVisible] = useState(false);
   const [duplicatesDialogVisible, setDuplicatesDialogVisible] = useState(false);
   const [duplicates, setDuplicates] = useState<{ packageName: string; listNames: string[] }[]>([]);
 
@@ -66,7 +66,7 @@ export default function CollectionDetailScreen() {
   const handleAddList = async (listId: number) => {
     try {
       await addListToCollection(collectionId, listId);
-      setAddDialogVisible(false);
+      setAddMenuVisible(false);
       await loadData();
       setSnackbarMessage('List added to collection');
     } catch (error) {
@@ -190,38 +190,27 @@ export default function CollectionDetailScreen() {
         </ScrollView>
       )}
 
-      <FAB
-        icon="plus"
-        onPress={() => setAddDialogVisible(true)}
-        style={[styles.fab, { backgroundColor: theme.colors.primaryContainer }]}
-        color={theme.colors.onPrimaryContainer}
-      />
-
-      <Portal>
-        <Dialog visible={addDialogVisible} onDismiss={() => setAddDialogVisible(false)}>
-          <Dialog.Title>Add List to Collection</Dialog.Title>
-          <Dialog.Content>
-            {availableLists.length === 0 ? (
-              <Text>No available lists to add.</Text>
-            ) : (
-              <ScrollView style={{ maxHeight: 300 }}>
-                {availableLists.map((list) => (
-                  <List.Item
-                    key={list.id}
-                    title={list.name}
-                    description={`${list.appCount || 0} apps`}
-                    onPress={() => handleAddList(list.id)}
-                    left={(props) => <List.Icon {...props} icon="format-list-bulleted" />}
-                  />
-                ))}
-              </ScrollView>
-            )}
-          </Dialog.Content>
-          <Dialog.Actions>
-            <Button onPress={() => setAddDialogVisible(false)}>Cancel</Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+      <Menu
+        visible={addMenuVisible}
+        onDismiss={() => setAddMenuVisible(false)}
+        anchor={
+          <FAB
+            icon="plus"
+            onPress={() => setAddMenuVisible(true)}
+            style={[styles.fab, { backgroundColor: theme.colors.primaryContainer }]}
+            color={theme.colors.onPrimaryContainer}
+          />
+        }
+        anchorPosition="top"
+      >
+        {availableLists.length === 0 ? (
+          <Menu.Item title="No available lists" disabled />
+        ) : (
+          availableLists.map((list) => (
+            <Menu.Item key={list.id} onPress={() => handleAddList(list.id)} title={list.name} />
+          ))
+        )}
+      </Menu>
 
       <Portal>
         <Dialog visible={duplicatesDialogVisible} onDismiss={() => setDuplicatesDialogVisible(false)}>

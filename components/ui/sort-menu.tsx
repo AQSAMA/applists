@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { StyleSheet } from 'react-native';
-import { Divider, IconButton, Menu } from 'react-native-paper';
+import { StyleSheet, View } from 'react-native';
+import type { MD3Theme } from 'react-native-paper';
+import { Divider, IconButton, Menu, Switch, Text, useTheme } from 'react-native-paper';
 import type { SortField } from '../../stores/apps-store';
 
 interface SortMenuProps {
@@ -30,11 +31,6 @@ export function SortMenu({ currentSort, isReversed, onSortChange, onReverseToggl
     closeMenu();
   };
 
-  const handleReverseToggle = () => {
-    onReverseToggle();
-    // Don't close menu on reverse toggle - better UX
-  };
-
   return (
     <Menu
       visible={visible}
@@ -56,11 +52,12 @@ export function SortMenu({ currentSort, isReversed, onSortChange, onReverseToggl
         />
       ))}
       <Divider />
-      <Menu.Item
-        title="Reverse Order"
-        leadingIcon={isReversed ? 'check' : undefined}
-        onPress={handleReverseToggle}
-      />
+      <View style={styles.reverseRow}>
+        <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
+          Reverse Order
+        </Text>
+        <Switch value={isReversed} onValueChange={onReverseToggle} />
+      </View>
     </Menu>
   );
 }
@@ -68,5 +65,12 @@ export function SortMenu({ currentSort, isReversed, onSortChange, onReverseToggl
 const styles = StyleSheet.create({
   menuContent: {
     minWidth: 200,
+  },
+  reverseRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
 });
