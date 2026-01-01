@@ -42,38 +42,25 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          # Run the build with --json for reliable parsing
-          # Use --no-wait to start build and get ID immediately
-          BUILD_OUTPUT=$(eas build --platform android --profile preview --non-interactive --no-wait --json)
+          # Run the build synchronously (waits for completion) with --json for reliable parsing
+          BUILD_OUTPUT=$(eas build --platform android --profile preview --non-interactive --json)
 
-          # Extract the Build ID from JSON output using jq
-          BUILD_ID=$(echo "$BUILD_OUTPUT" | jq -r '.[0].id')
+          # Extract the download URL from JSON output using jq
+          DOWNLOAD_URL=$(echo "$BUILD_OUTPUT" | jq -r '.[0].artifacts.buildUrl')
 
-          if [ -z "$BUILD_ID" ] || [ "$BUILD_ID" == "null" ]; then
-            echo "Error: Could not find Build ID in output"
+          if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" == "null" ]; then
+            echo "Error: Could not find download URL in output"
             echo "Output was: $BUILD_OUTPUT"
             exit 1
           fi
 
-          echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
-          echo "Build started with ID: $BUILD_ID"
-
-      - name: ⏳ Wait for Build
-        run: |
-          eas build:wait --id ${{ env.BUILD_ID }}
+          echo "DOWNLOAD_URL=$DOWNLOAD_URL" >> $GITHUB_ENV
+          echo "Build completed! Download URL: $DOWNLOAD_URL"
 
       - name: 📥 Download Build
         run: |
-          # Get the download URL from the build details
-          DOWNLOAD_URL=$(eas build:view --id ${{ env.BUILD_ID }} --json | jq -r .artifacts.buildUrl)
-
-          if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" == "null" ]; then
-            echo "Error: Could not find download URL"
-            exit 1
-          fi
-
-          echo "Downloading from $DOWNLOAD_URL"
-          curl -L -o app-release.apk "$DOWNLOAD_URL"
+          echo "Downloading from ${{ env.DOWNLOAD_URL }}"
+          curl -L -o app-release.apk "${{ env.DOWNLOAD_URL }}"
 
       - name: 🎉 Create GitHub Release
         uses: softprops/action-gh-release@v1
