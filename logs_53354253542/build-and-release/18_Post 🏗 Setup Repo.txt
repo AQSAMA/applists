@@ -1,0 +1,58 @@
+﻿2026-01-01T14:11:16.0254039Z ##[debug]Evaluating condition for step: 'Post 🏗 Setup Repo'
+2026-01-01T14:11:16.0256281Z ##[debug]Evaluating: always()
+2026-01-01T14:11:16.0256620Z ##[debug]Evaluating always:
+2026-01-01T14:11:16.0257372Z ##[debug]=> true
+2026-01-01T14:11:16.0257716Z ##[debug]Result: true
+2026-01-01T14:11:16.0258197Z ##[debug]Starting: Post 🏗 Setup Repo
+2026-01-01T14:11:16.0313389Z ##[debug]Loading inputs
+2026-01-01T14:11:16.0314784Z ##[debug]Evaluating: github.repository
+2026-01-01T14:11:16.0315093Z ##[debug]Evaluating Index:
+2026-01-01T14:11:16.0315341Z ##[debug]..Evaluating github:
+2026-01-01T14:11:16.0315583Z ##[debug]..=> Object
+2026-01-01T14:11:16.0315804Z ##[debug]..Evaluating String:
+2026-01-01T14:11:16.0316046Z ##[debug]..=> 'repository'
+2026-01-01T14:11:16.0316359Z ##[debug]=> 'AQSAMA/applists'
+2026-01-01T14:11:16.0316611Z ##[debug]Result: 'AQSAMA/applists'
+2026-01-01T14:11:16.0318520Z ##[debug]Evaluating: github.token
+2026-01-01T14:11:16.0318774Z ##[debug]Evaluating Index:
+2026-01-01T14:11:16.0318991Z ##[debug]..Evaluating github:
+2026-01-01T14:11:16.0319273Z ##[debug]..=> Object
+2026-01-01T14:11:16.0319488Z ##[debug]..Evaluating String:
+2026-01-01T14:11:16.0319710Z ##[debug]..=> 'token'
+2026-01-01T14:11:16.0320476Z ##[debug]=> '***'
+2026-01-01T14:11:16.0320801Z ##[debug]Result: '***'
+2026-01-01T14:11:16.0329612Z ##[debug]Loading env
+2026-01-01T14:11:16.0333805Z Post job cleanup.
+2026-01-01T14:11:16.1065041Z ##[debug]Getting git version
+2026-01-01T14:11:16.1077206Z [command]/usr/bin/git version
+2026-01-01T14:11:16.1115478Z git version 2.52.0
+2026-01-01T14:11:16.1138478Z ##[debug]0
+2026-01-01T14:11:16.1139139Z ##[debug]git version 2.52.0
+2026-01-01T14:11:16.1139518Z ##[debug]
+2026-01-01T14:11:16.1140649Z ##[debug]Set git useragent to: git/2.52.0 (github-actions-checkout)
+2026-01-01T14:11:16.1144413Z ::add-mask::***
+2026-01-01T14:11:16.1159687Z Temporarily overriding HOME='/home/runner/work/_temp/ae89b8e0-cab8-4326-8be9-5e3ea3432b80' before making global git config changes
+2026-01-01T14:11:16.1161326Z Adding repository directory to the temporary git global config as a safe directory
+2026-01-01T14:11:16.1164426Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/applists/applists
+2026-01-01T14:11:16.1191731Z ##[debug]0
+2026-01-01T14:11:16.1192334Z ##[debug]
+2026-01-01T14:11:16.1197834Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+2026-01-01T14:11:16.1223434Z ##[debug]1
+2026-01-01T14:11:16.1224181Z ##[debug]
+2026-01-01T14:11:16.1227605Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+2026-01-01T14:11:16.1459236Z ##[debug]0
+2026-01-01T14:11:16.1460134Z ##[debug]
+2026-01-01T14:11:16.1464585Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+2026-01-01T14:11:16.1484517Z http.https://github.com/.extraheader
+2026-01-01T14:11:16.1492133Z ##[debug]0
+2026-01-01T14:11:16.1492760Z ##[debug]http.https://github.com/.extraheader
+2026-01-01T14:11:16.1493211Z ##[debug]
+2026-01-01T14:11:16.1497384Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+2026-01-01T14:11:16.1522759Z ##[debug]0
+2026-01-01T14:11:16.1523321Z ##[debug]
+2026-01-01T14:11:16.1527070Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+2026-01-01T14:11:16.1749606Z ##[debug]0
+2026-01-01T14:11:16.1750304Z ##[debug]
+2026-01-01T14:11:16.1750815Z ##[debug]Unsetting HOME override
+2026-01-01T14:11:16.1820744Z ##[debug]Node Action run completed with exit code 0
+2026-01-01T14:11:16.1823069Z ##[debug]Finishing: Post 🏗 Setup Repo

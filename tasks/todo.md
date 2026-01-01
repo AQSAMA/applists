@@ -202,3 +202,17 @@ When a list is deleted from the Lists menu, it's also removed from collections d
 - Basic CRUD for lists and collections is functional.
 - UI components follow Material 3 guidelines.
 - Repository already has export/import functions implemented.
+
+---
+
+## GitHub Release Automation
+
+### Goal
+Automate APK creation and GitHub Release on tag push.
+
+### Plan
+- [x] Create `.github/workflows/release.yml`
+- [x] Configure `eas.json`
+- [x] Fix CI logging issues (install `eas-cli`, use `tee`)
+- [ ] User to push changes and new tag
+- [ ] Verify successful release

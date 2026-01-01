@@ -27,16 +27,16 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: 📦 Install Dependencies
-        run: npm install -g pnpm && pnpm install
+        run: npm install -g pnpm eas-cli && pnpm install
 
       - name: 🚀 Build APK
         id: build_apk
+        shell: bash
         run: |
+          set -o pipefail
           # Run the build and capture the output to find the Build ID
           # We use --non-interactive and --no-wait to start it and get the ID back immediately
-          eas build --platform android --profile preview --non-interactive --no-wait > build_output.txt
-          
-          cat build_output.txt
+          eas build --platform android --profile preview --non-interactive --no-wait | tee build_output.txt
           
           # Extract the Build ID using grep/regex
           # Matches: Build details: https://expo.dev/.../builds/UUID

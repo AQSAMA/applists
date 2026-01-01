@@ -1,0 +1,5 @@
+﻿2026-01-01T14:11:16.0217881Z ##[debug]Evaluating condition for step: '🚀 Build APK'
+2026-01-01T14:11:16.0219059Z ##[debug]Evaluating: success()
+2026-01-01T14:11:16.0219379Z ##[debug]Evaluating success:
+2026-01-01T14:11:16.0219708Z ##[debug]=> false
+2026-01-01T14:11:16.0220279Z ##[debug]Result: false

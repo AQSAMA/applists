@@ -1,0 +1,5 @@
+﻿2026-01-01T14:11:16.0240285Z ##[debug]Evaluating condition for step: '🎉 Create GitHub Release'
+2026-01-01T14:11:16.0241745Z ##[debug]Evaluating: success()
+2026-01-01T14:11:16.0242084Z ##[debug]Evaluating success:
+2026-01-01T14:11:16.0242405Z ##[debug]=> false
+2026-01-01T14:11:16.0242724Z ##[debug]Result: false
