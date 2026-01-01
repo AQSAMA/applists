@@ -255,3 +255,36 @@ Automate APK creation and GitHub Release on tag push.
 - [x] Fix `Setup EAS` failure (force `packager: npm` to avoid yarn issues)
 - [ ] User to push changes and new tag
 - [ ] Verify successful release
+
+---
+
+## CI/CD Fixes (Current Task)
+
+### Problem
+The GitHub Actions workflow has several issues that could cause instability or failures:
+1. `packager: npm` is set but project uses pnpm (inconsistent)
+2. Using `latest` for expo/eas versions (risky - could break unexpectedly)
+3. Brittle Build ID extraction using regex on text output (fragile)
+
+### Plan
+- [x] **1. Fix packager to use pnpm** - Change `packager: npm` to `packager: pnpm` in the EAS setup step
+- [x] **2. Pin expo/eas versions** - Use specific versions instead of `latest`
+- [x] **3. Use JSON output for Build ID extraction** - Replace brittle grep with `--json` flag for reliable parsing
+
+### Changes Made
+File: `.github/workflows/release.yml`
+1. Changed `packager: npm` to `packager: pnpm` (line 31)
+2. Pinned `expo-version: ^52.0.0` and `eas-version: ^16.0.0` instead of `latest`
+3. Replaced brittle regex-based Build ID extraction with `--json` flag and `jq` parsing
+4. Added better error handling with output display on failure
+
+### Review
+The CI/CD workflow has been updated with three key improvements:
+
+1. **Packager Consistency**: Now uses `pnpm` to match the project's package manager, ensuring consistent dependency resolution between local development and CI.
+
+2. **Version Pinning**: Expo CLI and EAS CLI versions are now pinned to `^52.0.0` and `^16.0.0` respectively. This prevents unexpected breakages from new releases while still allowing patch updates.
+
+3. **Reliable Build ID Extraction**: Replaced the fragile regex pattern (`grep -oP`) with proper JSON parsing using `--json` flag and `jq`. This is much more robust as it doesn't depend on Expo's human-readable output format.
+
+**To test**: Push a new tag (e.g., `git tag v1.0.1 && git push origin v1.0.1`) and verify the workflow completes successfully.
