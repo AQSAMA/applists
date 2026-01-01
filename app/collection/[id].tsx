@@ -2,32 +2,33 @@ import { cacheDirectory, writeAsStringAsync } from "expo-file-system/legacy";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import * as Sharing from "expo-sharing";
 import React, { useCallback, useEffect, useState } from "react";
-import { Dimensions, ScrollView, StyleSheet, View } from "react-native";
+import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import type { MD3Theme } from "react-native-paper";
 import {
-  Appbar,
-  Button,
-  Dialog,
-  Divider,
-  FAB,
-  List,
-  Menu,
-  Portal,
-  Snackbar,
-  Text,
-  useTheme,
+    Appbar,
+    Button,
+    Dialog,
+    Divider,
+    FAB,
+    IconButton,
+    List,
+    Portal,
+    Snackbar,
+    Text,
+    TouchableRipple,
+    useTheme,
 } from "react-native-paper";
 
 import { EmptyState, ListCard, SearchBar } from "@/components/ui";
 import type { AppList, Collection } from "@/lib/repository";
 import {
-  addListToCollection,
-  exportCollectionData,
-  findDuplicatesInCollection,
-  getAllLists,
-  getCollection,
-  getCollectionLists,
-  removeListFromCollection,
+    addListToCollection,
+    exportCollectionData,
+    findDuplicatesInCollection,
+    getAllLists,
+    getCollection,
+    getCollectionLists,
+    removeListFromCollection,
 } from "@/lib/repository";
 
 export default function CollectionDetailScreen() {
@@ -222,52 +223,83 @@ export default function CollectionDetailScreen() {
       />
 
       <Portal>
-        <Menu
+        <Modal
           visible={addMenuVisible}
-          onDismiss={() => setAddMenuVisible(false)}
-          anchor={{
-            x: Dimensions.get("window").width - 16,
-            y: Dimensions.get("window").height - 80,
-          }}
-          anchorPosition="top"
+          transparent
+          animationType="slide"
+          onRequestClose={() => setAddMenuVisible(false)}
         >
-          {availableLists.length === 0 ? (
-            <Menu.Item title="No available lists" disabled />
-          ) : (
-            availableLists.map((list) => (
-              <Menu.Item
-                key={list.id}
-                onPress={() => handleAddList(list.id)}
-                title={list.name}
-              />
-            ))
-          )}
-        </Menu>
+          <Pressable style={styles.overlay} onPress={() => setAddMenuVisible(false)}>
+            <Pressable
+              style={[styles.bottomSheet, { backgroundColor: theme.colors.surface }]}
+              onPress={(e) => e.stopPropagation()}
+            >
+              <View style={styles.handle} />
+              <Text variant="titleMedium" style={styles.sheetTitle}>Add List</Text>
+              {availableLists.length === 0 ? (
+                <Text style={styles.emptyText}>No available lists</Text>
+              ) : (
+                <ScrollView style={styles.sheetScroll}>
+                  {availableLists.map((list) => (
+                    <TouchableRipple
+                      key={list.id}
+                      onPress={() => handleAddList(list.id)}
+                      style={styles.sheetItem}
+                    >
+                      <View style={styles.sheetItemContent}>
+                        <IconButton icon="format-list-bulleted" size={24} />
+                        <Text variant="bodyLarge">{list.name}</Text>
+                      </View>
+                    </TouchableRipple>
+                  ))}
+                </ScrollView>
+              )}
+            </Pressable>
+          </Pressable>
+        </Modal>
       </Portal>
 
       <Portal>
-        <Menu
+        <Modal
           visible={menuVisible}
-          onDismiss={() => setMenuVisible(false)}
-          anchor={{ x: Dimensions.get("window").width - 10, y: 50 }}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setMenuVisible(false)}
         >
-          <Menu.Item
-            onPress={() => {
-              setMenuVisible(false);
-              handleExport();
-            }}
-            title="Export"
-            leadingIcon="export"
-          />
-          <Menu.Item
-            onPress={() => {
-              setMenuVisible(false);
-              handleCheckDuplicates();
-            }}
-            title="Check Duplicates"
-            leadingIcon="content-duplicate"
-          />
-        </Menu>
+          <Pressable style={styles.overlay} onPress={() => setMenuVisible(false)}>
+            <Pressable
+              style={[styles.bottomSheet, { backgroundColor: theme.colors.surface }]}
+              onPress={(e) => e.stopPropagation()}
+            >
+              <View style={styles.handle} />
+              <Text variant="titleMedium" style={styles.sheetTitle}>Options</Text>
+              <TouchableRipple
+                onPress={() => {
+                  setMenuVisible(false);
+                  handleExport();
+                }}
+                style={styles.sheetItem}
+              >
+                <View style={styles.sheetItemContent}>
+                  <IconButton icon="export" size={24} />
+                  <Text variant="bodyLarge">Export</Text>
+                </View>
+              </TouchableRipple>
+              <TouchableRipple
+                onPress={() => {
+                  setMenuVisible(false);
+                  handleCheckDuplicates();
+                }}
+                style={styles.sheetItem}
+              >
+                <View style={styles.sheetItemContent}>
+                  <IconButton icon="content-duplicate" size={24} />
+                  <Text variant="bodyLarge">Check Duplicates</Text>
+                </View>
+              </TouchableRipple>
+            </Pressable>
+          </Pressable>
+        </Modal>
       </Portal>
 
       <Portal>
@@ -360,5 +392,44 @@ const styles = StyleSheet.create({
     position: "absolute",
     right: 16,
     bottom: 16,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-end",
+  },
+  bottomSheet: {
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingBottom: 32,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    backgroundColor: "#888",
+    borderRadius: 2,
+    alignSelf: "center",
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  sheetTitle: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  sheetItem: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  sheetItemContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  sheetScroll: {
+    maxHeight: 300,
+  },
+  emptyText: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    opacity: 0.6,
   },
 });

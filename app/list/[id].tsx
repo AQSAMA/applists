@@ -3,17 +3,18 @@ import { cacheDirectory, writeAsStringAsync } from 'expo-file-system/legacy';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Sharing from 'expo-sharing';
 import React, { useCallback, useEffect, useState } from 'react';
-import { Dimensions, Linking, RefreshControl, StyleSheet, View } from 'react-native';
+import { Linking, Modal, Pressable, RefreshControl, StyleSheet, View } from 'react-native';
 import type { MD3Theme } from 'react-native-paper';
 import {
-  Appbar,
-  Button,
-  Dialog,
-  Menu,
-  Portal,
-  Snackbar,
-  Text,
-  useTheme
+    Appbar,
+    Button,
+    Dialog,
+    IconButton,
+    Portal,
+    Snackbar,
+    Text,
+    TouchableRipple,
+    useTheme
 } from 'react-native-paper';
 
 import { AppListItem, EmptyState, SearchBar, StatusBadge } from '@/components/ui';
@@ -176,20 +177,34 @@ export default function ListDetailScreen() {
       />
 
       <Portal>
-        <Menu
+        <Modal
           visible={menuVisible}
-          onDismiss={() => setMenuVisible(false)}
-          anchor={{ x: Dimensions.get('window').width - 10, y: 50 }}
+          transparent
+          animationType="slide"
+          onRequestClose={() => setMenuVisible(false)}
         >
-          <Menu.Item
-            onPress={() => {
-              setMenuVisible(false);
-              handleExport();
-            }}
-            title="Export"
-            leadingIcon="export"
-          />
-        </Menu>
+          <Pressable style={styles.overlay} onPress={() => setMenuVisible(false)}>
+            <Pressable
+              style={[styles.bottomSheet, { backgroundColor: theme.colors.surface }]}
+              onPress={(e) => e.stopPropagation()}
+            >
+              <View style={styles.handle} />
+              <Text variant="titleMedium" style={styles.sheetTitle}>Options</Text>
+              <TouchableRipple
+                onPress={() => {
+                  setMenuVisible(false);
+                  handleExport();
+                }}
+                style={styles.sheetItem}
+              >
+                <View style={styles.sheetItemContent}>
+                  <IconButton icon="export" size={24} />
+                  <Text variant="bodyLarge">Export</Text>
+                </View>
+              </TouchableRipple>
+            </Pressable>
+          </Pressable>
+        </Modal>
       </Portal>
 
       {isSelectionMode && (
@@ -268,5 +283,36 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 8,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  bottomSheet: {
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingBottom: 32,
+  },
+  handle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#888',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  sheetTitle: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  sheetItem: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  sheetItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
 });

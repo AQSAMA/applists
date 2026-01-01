@@ -2,16 +2,15 @@ import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import type { MD3Theme } from 'react-native-paper';
 import {
-  Appbar,
-  Button,
-  Dialog,
-  Divider,
-  List,
-  Portal,
-  Snackbar,
-  Switch,
-  Text,
-  useTheme,
+    Button,
+    Dialog,
+    Divider,
+    List,
+    Portal,
+    Snackbar,
+    Switch,
+    Text,
+    useTheme,
 } from 'react-native-paper';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -39,10 +38,6 @@ export default function SettingsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Appbar.Header style={{ backgroundColor: theme.colors.surface }}>
-        <Appbar.Content title="Settings" />
-      </Appbar.Header>
-
       <ScrollView>
         <List.Section>
           <List.Subheader>Appearance</List.Subheader>
