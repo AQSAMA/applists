@@ -214,5 +214,6 @@ Automate APK creation and GitHub Release on tag push.
 - [x] Create `.github/workflows/release.yml`
 - [x] Configure `eas.json`
 - [x] Fix CI logging issues (install `eas-cli`, use `tee`)
+- [x] Fix `Setup EAS` failure (force `packager: npm` to avoid yarn issues)
 - [ ] User to push changes and new tag
 - [ ] Verify successful release
