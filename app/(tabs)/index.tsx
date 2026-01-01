@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Linking, RefreshControl, StyleSheet, View } from 'react-native';
 import type { MD3Theme } from 'react-native-paper';
-import { Appbar, FAB, IconButton, Snackbar, useTheme } from 'react-native-paper';
+import { FAB, IconButton, Snackbar, Text, useTheme } from 'react-native-paper';
 
 import { AppListItem, EmptyState, FilterChips, SearchBar, SortMenu } from '@/components/ui';
 import { getAllListedPackageNames } from '@/lib/repository';
@@ -115,34 +115,34 @@ export default function AppsScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Appbar.Header style={{ backgroundColor: theme.colors.surface }}>
-        {isSelectionMode ? (
-          <>
-            <Appbar.Action icon="close" onPress={clearSelection} />
-            <Appbar.Content title={`${selectedPackages.size} selected`} />
-            <Appbar.Action
-              icon="select-all"
-              onPress={() => selectAll(filteredApps.map((a) => a.packageName))}
-            />
-          </>
-        ) : (
-          <>
-            <Appbar.Content title="Installed Apps" />
-            <IconButton
-              icon={excludeListed ? 'filter' : 'filter-outline'}
-              onPress={() => setExcludeListed(!excludeListed)}
-            />
-            <SortMenu
-              currentSort={sortField}
-              isReversed={sortReverse}
-              onSortChange={setSortField}
-              onReverseToggle={toggleSortReverse}
-            />
-          </>
-        )}
-      </Appbar.Header>
+      {isSelectionMode ? (
+        <View style={[styles.selectionHeader, { backgroundColor: theme.colors.surface }]}>
+          <IconButton icon="close" onPress={clearSelection} />
+          <Text variant="titleMedium" style={{ flex: 1 }}>
+            {selectedPackages.size} selected
+          </Text>
+          <IconButton
+            icon="select-all"
+            onPress={() => selectAll(filteredApps.map((a) => a.packageName))}
+          />
+        </View>
+      ) : null}
 
-      <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+      <View style={styles.searchRow}>
+        <View style={{ flex: 1 }}>
+          <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
+        </View>
+        <IconButton
+          icon={excludeListed ? 'filter' : 'filter-outline'}
+          onPress={() => setExcludeListed(!excludeListed)}
+        />
+        <SortMenu
+          currentSort={sortField}
+          isReversed={sortReverse}
+          onSortChange={setSortField}
+          onReverseToggle={toggleSortReverse}
+        />
+      </View>
       <FilterChips currentFilter={filter} onFilterChange={setFilter} />
 
       <FlashList
@@ -187,6 +187,17 @@ export default function AppsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  selectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 4,
+    paddingVertical: 8,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: 4,
   },
   fab: {
     position: 'absolute',

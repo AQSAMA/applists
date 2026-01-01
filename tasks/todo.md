@@ -5,7 +5,23 @@ Build an Android "App List Manager" using Expo React Native with Material Design
 
 ---
 
-## Bug Fixes (Current Task - Pop-up Menu & Collection Behavior)
+## UI Minimalist Adjustments (Current Task)
+
+### Problem
+1. Remove the top header/banner section ("Apps" / "Installed Apps" title area)
+2. Make the sort menu appear as a solid bottom sheet instead of floating dropdown
+
+### Plan
+- [x] **1. Remove Appbar.Header from Apps screen** - Remove the header, keep filter/sort icons inline
+- [x] **2. Convert SortMenu to bottom sheet** - Use Modal positioned at bottom of screen
+
+### Changes Made
+1. **`app/(tabs)/index.tsx`** - Removed Appbar.Header, moved search bar and filter/sort icons into a single row
+2. **`components/ui/sort-menu.tsx`** - Converted from floating Portal Menu to a bottom sheet Modal
+
+---
+
+## Bug Fixes (Previous Task - Pop-up Menu & Collection Behavior)
 
 ### Problem 1: Pop-up menus only work once
 Pop-up menus (like the sorting menu) only function once; clicking them a second time disables them.

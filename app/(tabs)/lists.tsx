@@ -3,36 +3,36 @@ import { readAsStringAsync } from "expo-file-system/legacy";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  View,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    View,
 } from "react-native";
 import type { MD3Theme } from "react-native-paper";
 import {
-  Appbar,
-  Button,
-  Checkbox,
-  Dialog,
-  FAB,
-  List,
-  Portal,
-  RadioButton,
-  Snackbar,
-  Text,
-  TextInput,
-  useTheme,
+    Button,
+    Checkbox,
+    Dialog,
+    FAB,
+    IconButton,
+    List,
+    Portal,
+    RadioButton,
+    Snackbar,
+    Text,
+    TextInput,
+    useTheme,
 } from "react-native-paper";
 
 import { EmptyState, ListCard, SearchBar } from "@/components/ui";
 import type { AppList } from "@/lib/repository";
 import {
-  createList,
-  deleteList,
-  getAllLists,
-  importListData,
-  mergeLists,
+    createList,
+    deleteList,
+    getAllLists,
+    importListData,
+    mergeLists,
 } from "@/lib/repository";
 import { useListsStore } from "@/stores";
 
@@ -187,17 +187,17 @@ export default function ListsScreen() {
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <Appbar.Header style={{ backgroundColor: theme.colors.surface }}>
-        <Appbar.Content title="My Lists" />
-        <Appbar.Action icon="merge" onPress={handleOpenMerge} />
-        <Appbar.Action icon="import" onPress={handleImport} />
-      </Appbar.Header>
-
-      <SearchBar
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        placeholder="Search lists..."
-      />
+      <View style={styles.searchRow}>
+        <View style={{ flex: 1 }}>
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search lists..."
+          />
+        </View>
+        <IconButton icon="merge" onPress={handleOpenMerge} />
+        <IconButton icon="import" onPress={handleImport} />
+      </View>
 
       {filteredLists.length === 0 ? (
         <EmptyState
@@ -358,6 +358,11 @@ export default function ListsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingRight: 4,
   },
   listContainer: {
     paddingVertical: 8,

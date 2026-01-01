@@ -3,32 +3,32 @@ import { readAsStringAsync } from "expo-file-system/legacy";
 import { useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  View,
+    KeyboardAvoidingView,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    View,
 } from "react-native";
 import type { MD3Theme } from "react-native-paper";
 import {
-  Appbar,
-  Button,
-  Dialog,
-  FAB,
-  Portal,
-  Snackbar,
-  Text,
-  TextInput,
-  useTheme,
+    Button,
+    Dialog,
+    FAB,
+    IconButton,
+    Portal,
+    Snackbar,
+    Text,
+    TextInput,
+    useTheme,
 } from "react-native-paper";
 
 import { CollectionCard, EmptyState, SearchBar } from "@/components/ui";
 import type { Collection } from "@/lib/repository";
 import {
-  createCollection,
-  deleteCollection,
-  getAllCollections,
-  importCollectionData,
+    createCollection,
+    deleteCollection,
+    getAllCollections,
+    importCollectionData,
 } from "@/lib/repository";
 import { useListsStore } from "@/stores";
 
@@ -139,16 +139,16 @@ export default function CollectionsScreen() {
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <Appbar.Header style={{ backgroundColor: theme.colors.surface }}>
-        <Appbar.Content title="Collections" />
-        <Appbar.Action icon="import" onPress={handleImport} />
-      </Appbar.Header>
-
-      <SearchBar
-        value={searchQuery}
-        onChangeText={setSearchQuery}
-        placeholder="Search collections..."
-      />
+      <View style={styles.searchRow}>
+        <View style={{ flex: 1 }}>
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search collections..."
+          />
+        </View>
+        <IconButton icon="import" onPress={handleImport} />
+      </View>
 
       {filteredCollections.length === 0 ? (
         <EmptyState
@@ -251,6 +251,11 @@ export default function CollectionsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  searchRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingRight: 4,
   },
   listContainer: {
     paddingVertical: 8,
