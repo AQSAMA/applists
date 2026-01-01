@@ -5,7 +5,45 @@ Build an Android "App List Manager" using Expo React Native with Material Design
 
 ---
 
-## UI Minimalist Adjustments (Current Task)
+## Rename Lists and Collections (Current Task)
+
+### Problem
+Users need the ability to rename lists and collections after creating them.
+
+### Plan
+- [x] **1. Add rename option to List Detail screen** - Add "Rename" option to the options bottom sheet menu in `app/list/[id].tsx`
+- [x] **2. Add rename option to Collection Detail screen** - Add "Rename" option to the options bottom sheet menu in `app/collection/[id].tsx`
+- [x] **3. Create rename dialog** - Simple text input dialog to enter the new name
+- [x] **4. Call existing repository functions** - Use `updateList()` and `updateCollection()` from repository.ts (already exist)
+
+### Changes Made
+1. **`app/list/[id].tsx`**:
+   - Added `TextInput` import from react-native-paper
+   - Added `updateList` import from repository
+   - Added `renameDialogVisible` and `newName` state variables
+   - Added `handleOpenRenameDialog()` function to open dialog with current name
+   - Added `handleRename()` function to call `updateList()` and update local state
+   - Added "Rename" option with pencil icon to the options bottom sheet menu
+   - Added rename dialog with TextInput for entering new name
+
+2. **`app/collection/[id].tsx`**:
+   - Added `TextInput` import from react-native-paper
+   - Added `updateCollection` import from repository
+   - Added `renameDialogVisible` and `newName` state variables
+   - Added `handleOpenRenameDialog()` function to open dialog with current name
+   - Added `handleRename()` function to call `updateCollection()` and update local state
+   - Added "Rename" option with pencil icon to the options bottom sheet menu
+   - Added rename dialog with TextInput for entering new name
+
+### Implementation Details
+- Both screens already have a bottom sheet menu with an "Export" option
+- We'll add a "Rename" option to each menu
+- Use react-native-paper's Dialog component with TextInput for the rename dialog
+- After successful rename, update the local state and header title
+
+---
+
+## UI Minimalist Adjustments (Previous Task)
 
 ### Problem
 1. Remove the top header/banner section ("Apps" / "Installed Apps" title area)

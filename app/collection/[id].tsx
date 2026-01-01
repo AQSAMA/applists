@@ -5,30 +5,32 @@ import React, { useCallback, useEffect, useState } from "react";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 import type { MD3Theme } from "react-native-paper";
 import {
-    Appbar,
-    Button,
-    Dialog,
-    Divider,
-    FAB,
-    IconButton,
-    List,
-    Portal,
-    Snackbar,
-    Text,
-    TouchableRipple,
-    useTheme,
+  Appbar,
+  Button,
+  Dialog,
+  Divider,
+  FAB,
+  IconButton,
+  List,
+  Portal,
+  Snackbar,
+  Text,
+  TextInput,
+  TouchableRipple,
+  useTheme,
 } from "react-native-paper";
 
 import { EmptyState, ListCard, SearchBar } from "@/components/ui";
 import type { AppList, Collection } from "@/lib/repository";
 import {
-    addListToCollection,
-    exportCollectionData,
-    findDuplicatesInCollection,
-    getAllLists,
-    getCollection,
-    getCollectionLists,
-    removeListFromCollection,
+  addListToCollection,
+  exportCollectionData,
+  findDuplicatesInCollection,
+  getAllLists,
+  getCollection,
+  getCollectionLists,
+  removeListFromCollection,
+  updateCollection,
 } from "@/lib/repository";
 
 export default function CollectionDetailScreen() {
@@ -53,6 +55,10 @@ export default function CollectionDetailScreen() {
   // Remove list dialog state
   const [removeDialogVisible, setRemoveDialogVisible] = useState(false);
   const [listToRemove, setListToRemove] = useState<AppList | null>(null);
+
+  // Rename dialog
+  const [renameDialogVisible, setRenameDialogVisible] = useState(false);
+  const [newName, setNewName] = useState("");
 
   const loadData = useCallback(async () => {
     if (!collectionId) return;
@@ -129,6 +135,34 @@ export default function CollectionDetailScreen() {
     } catch (error) {
       console.error("Failed to export collection:", error);
       setSnackbarMessage("Failed to export collection");
+    }
+  };
+
+  const handleOpenRenameDialog = () => {
+    setNewName(collection?.name || "");
+    setRenameDialogVisible(true);
+    setMenuVisible(false);
+  };
+
+  const handleRename = async () => {
+    if (!newName.trim()) {
+      setSnackbarMessage("Name cannot be empty");
+      return;
+    }
+    try {
+      await updateCollection(
+        collectionId,
+        newName.trim(),
+        collection?.description ?? undefined,
+      );
+      setCollection((prev) =>
+        prev ? { ...prev, name: newName.trim() } : null,
+      );
+      setRenameDialogVisible(false);
+      setSnackbarMessage("Collection renamed");
+    } catch (error) {
+      console.error("Failed to rename collection:", error);
+      setSnackbarMessage("Failed to rename collection");
     }
   };
 
@@ -229,13 +263,21 @@ export default function CollectionDetailScreen() {
           animationType="slide"
           onRequestClose={() => setAddMenuVisible(false)}
         >
-          <Pressable style={styles.overlay} onPress={() => setAddMenuVisible(false)}>
+          <Pressable
+            style={styles.overlay}
+            onPress={() => setAddMenuVisible(false)}
+          >
             <Pressable
-              style={[styles.bottomSheet, { backgroundColor: theme.colors.surface }]}
+              style={[
+                styles.bottomSheet,
+                { backgroundColor: theme.colors.surface },
+              ]}
               onPress={(e) => e.stopPropagation()}
             >
               <View style={styles.handle} />
-              <Text variant="titleMedium" style={styles.sheetTitle}>Add List</Text>
+              <Text variant="titleMedium" style={styles.sheetTitle}>
+                Add List
+              </Text>
               {availableLists.length === 0 ? (
                 <Text style={styles.emptyText}>No available lists</Text>
               ) : (
@@ -266,13 +308,30 @@ export default function CollectionDetailScreen() {
           animationType="slide"
           onRequestClose={() => setMenuVisible(false)}
         >
-          <Pressable style={styles.overlay} onPress={() => setMenuVisible(false)}>
+          <Pressable
+            style={styles.overlay}
+            onPress={() => setMenuVisible(false)}
+          >
             <Pressable
-              style={[styles.bottomSheet, { backgroundColor: theme.colors.surface }]}
+              style={[
+                styles.bottomSheet,
+                { backgroundColor: theme.colors.surface },
+              ]}
               onPress={(e) => e.stopPropagation()}
             >
               <View style={styles.handle} />
-              <Text variant="titleMedium" style={styles.sheetTitle}>Options</Text>
+              <Text variant="titleMedium" style={styles.sheetTitle}>
+                Options
+              </Text>
+              <TouchableRipple
+                onPress={handleOpenRenameDialog}
+                style={styles.sheetItem}
+              >
+                <View style={styles.sheetItemContent}>
+                  <IconButton icon="pencil" size={24} />
+                  <Text variant="bodyLarge">Rename</Text>
+                </View>
+              </TouchableRipple>
               <TouchableRipple
                 onPress={() => {
                   setMenuVisible(false);
@@ -300,6 +359,30 @@ export default function CollectionDetailScreen() {
             </Pressable>
           </Pressable>
         </Modal>
+      </Portal>
+
+      <Portal>
+        <Dialog
+          visible={renameDialogVisible}
+          onDismiss={() => setRenameDialogVisible(false)}
+        >
+          <Dialog.Title>Rename Collection</Dialog.Title>
+          <Dialog.Content>
+            <TextInput
+              mode="outlined"
+              label="Name"
+              value={newName}
+              onChangeText={setNewName}
+              autoFocus
+            />
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setRenameDialogVisible(false)}>
+              Cancel
+            </Button>
+            <Button onPress={handleRename}>Rename</Button>
+          </Dialog.Actions>
+        </Dialog>
       </Portal>
 
       <Portal>
