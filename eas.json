@@ -16,7 +16,9 @@
       },
       "env": {
         "EXPO_NO_HERMES_DEV_MODE": "1"
-      }
+      },
+      "node": "20.19.6",
+      "pnpm": "8.15.9"
     },
     "production": {
       "autoIncrement": true,
