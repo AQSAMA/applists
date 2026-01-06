@@ -14,28 +14,26 @@ jobs:
       - name: 🏗 Setup Repo
         uses: actions/checkout@v3
 
-      - name: 🏗 Setup pnpm
-        uses: pnpm/action-setup@v2
+      - name: 🏗 Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          version: 8
+          bun-version: 1.2.20
 
       - name: 🏗 Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 20
-          cache: "pnpm"
-          cache-dependency-path: pnpm-lock.yaml
 
       - name: 🏗 Setup EAS
         uses: expo/expo-github-action@v8
         with:
           expo-version: latest
           eas-version: latest
-          packager: pnpm
+          packager: bun
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: 📦 Install Dependencies
-        run: pnpm install
+        run: bun install
 
       - name: 🚀 Build APK
         id: build_apk
@@ -54,13 +52,13 @@ jobs:
             exit 1
           fi
 
-          echo "DOWNLOAD_URL=$DOWNLOAD_URL" >> $GITHUB_ENV
+          echo "DOWNLOAD_URL=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
           echo "Build completed! Download URL: $DOWNLOAD_URL"
 
       - name: 📥 Download Build
         run: |
-          echo "Downloading from ${{ env.DOWNLOAD_URL }}"
-          curl -L -o app-release.apk "${{ env.DOWNLOAD_URL }}"
+          echo "Downloading from ${{ steps.build_apk.outputs.DOWNLOAD_URL }}"
+          curl -L -o app-release.apk "${{ steps.build_apk.outputs.DOWNLOAD_URL }}"
 
       - name: 🎉 Create GitHub Release
         uses: softprops/action-gh-release@v1

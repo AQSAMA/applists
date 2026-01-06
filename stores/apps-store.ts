@@ -40,6 +40,7 @@ interface AppsState {
   selectAll: (packageNames: string[]) => void;
   clearSelection: () => void;
   setSelectionMode: (mode: boolean) => void;
+  updateAppIcon: (packageName: string, icon: string) => void;
   
   // Computed
   getFilteredApps: () => AppInfo[];
@@ -102,6 +103,12 @@ export const useAppsStore = create<AppsState>((set, get) => ({
     isSelectionMode,
     selectedPackages: isSelectionMode ? get().selectedPackages : new Set(),
   }),
+  
+  updateAppIcon: (packageName, icon) => set((state) => ({
+    apps: state.apps.map((app) =>
+      app.packageName === packageName ? { ...app, icon } : app
+    ),
+  })),
   
   getFilteredApps: () => {
     const state = get();

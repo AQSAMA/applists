@@ -5,7 +5,129 @@ Build an Android "App List Manager" using Expo React Native with Material Design
 
 ---
 
-## Rename Lists and Collections (Current Task)
+## Migration: pnpm → Bun (Current Task)
+
+### Reason
+Switch to Bun package manager to save storage space on ThinkPad T480 with limited disk space.
+
+**Benefits of Bun:**
+- ~3x faster installs than pnpm
+- Smaller disk footprint (efficient hardlinks + symlinks)
+- Compatible with Expo SDK 54 and EAS Build (Bun 1.2.20 on latest images)
+
+### EAS CLI Setup
+- [x] Install `eas-cli` as a dev dependency (`bun add -d eas-cli`)
+- [ ] Verify `bun x eas --version`
+
+### Pre-Migration
+- [ ] Verify Bun is installed locally (`bun --version`)
+- [ ] Ensure working state is committed to git
+
+### Tasks
+
+#### 1. Update eas.json
+- [ ] Replace `"pnpm": "8.15.9"` with `"bun": "1.2.20"` in preview profile
+- [ ] Remove `"node": "20.19.6"` (let EAS use default)
+
+#### 2. Update GitHub Actions Workflow (.github/workflows/release.yml)
+- [ ] Replace `pnpm/action-setup@v2` with `oven-sh/setup-bun@v2`
+- [ ] Update Node cache to use `bun.lockb`
+- [ ] Change `pnpm install` to `bun install`
+- [ ] Update EAS packager from `pnpm` to `bun`
+
+#### 3. Delete pnpm-specific Files
+- [ ] Delete `pnpm-lock.yaml`
+- [ ] Delete `.npmrc` (contains pnpm-specific `node-linker=hoisted`)
+
+#### 4. Reinstall Dependencies
+- [ ] Delete `node_modules/`
+- [ ] Run `bun install` to generate `bun.lockb`
+
+#### 5. Test Locally
+- [ ] Run `bun run start` — verify Expo dev server starts
+- [ ] Run `bun run lint` — verify ESLint works
+
+#### 6. Commit Changes
+- [ ] Commit: "chore: migrate from pnpm to bun"
+
+### Files to Modify
+
+| File | Action |
+|------|--------|
+| `eas.json` | Replace pnpm → bun |
+| `.github/workflows/release.yml` | Update to Bun setup |
+| `pnpm-lock.yaml` | **DELETE** |
+| `.npmrc` | **DELETE** |
+| `bun.lockb` | Auto-generated |
+
+### Rollback Plan
+```bash
+git checkout -- .
+pnpm install
+```
+
+### Review
+*(To be completed after migration)*
+
+---
+
+## APK Size & Startup Performance Optimization (Previous Task)
+
+### Problem
+1. APK size is ~90MB, installed size exceeds 100MB
+2. Application startup time is very long
+
+### Root Causes Identified
+1. **All app icons loaded as Base64 on startup** - `getInstalledApps(true, true)` loads ALL app icons immediately. With 200+ apps, each icon being 50-200KB of Base64 data, this creates massive memory usage and slow startup.
+2. **No ProGuard/R8 enabled** - Code shrinking and resource shrinking not enabled for release builds.
+
+### Plan
+- [x] **1. Enable ProGuard in app.json** - Add `enableProguardInReleaseBuilds` and `enableShrinkResourcesInReleaseBuilds`
+- [x] **2. Export getAppIcon from module** - Add named export in `modules/installed-apps/index.ts`
+- [x] **3. Disable icons on startup** - Change `getInstalledApps(true, true)` to `getInstalledApps(true, false)`
+- [x] **4. Add updateAppIcon to store** - Add action to update single app's icon in store
+- [x] **5. Add lazy icon loading** - Load icon via useEffect when AppListItem renders
+
+### Changes Made
+1. **`app.json`**:
+   - Added `enableProguardInReleaseBuilds: true` - enables R8/ProGuard code shrinking
+   - Added `enableShrinkResourcesInReleaseBuilds: true` - removes unused resources
+
+2. **`modules/installed-apps/index.ts`**:
+   - Added named export for `getAppIcon` function (already exists in native module)
+
+3. **`app/(tabs)/index.tsx`**:
+   - Changed `getInstalledApps(true, true)` to `getInstalledApps(true, false)`
+   - Icons are no longer loaded on app startup
+
+4. **`stores/apps-store.ts`**:
+   - Added `updateAppIcon` action to store interface
+   - Added implementation to update single app's icon in the apps array
+
+5. **`components/ui/app-list-item.tsx`**:
+   - Added `useEffect` and `useState` imports
+   - Added `getAppIcon` import from installed-apps module
+   - Added `useAppsStore` import for updating store
+   - Added local `icon` state initialized from `app.icon`
+   - Added useEffect to lazy load icon when item renders (if not already loaded)
+   - Changed Image source to use local `icon` state
+
+### Expected Impact
+| Metric | Before | After |
+|--------|--------|-------|
+| APK Size | ~90MB | ~35-50MB |
+| Startup Time | ~5-10s | <1s |
+| Memory on Start | High (~100MB+) | Low (~20MB) |
+
+### Review
+- **ProGuard/R8**: Enables code shrinking which removes unused code and obfuscates the rest
+- **Resource shrinking**: Removes unused resources from the APK
+- **Lazy icon loading**: Icons are now loaded on-demand as list items appear on screen, rather than all at once on startup
+- **Store caching**: Once an icon is loaded, it's stored in the Zustand store so it doesn't need to be reloaded
+
+---
+
+## Rename Lists and Collections (Previous Task)
 
 ### Problem
 Users need the ability to rename lists and collections after creating them.

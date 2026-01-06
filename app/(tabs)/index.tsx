@@ -1,6 +1,6 @@
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Linking, RefreshControl, StyleSheet, View } from 'react-native';
 import type { MD3Theme } from 'react-native-paper';
 import { FAB, IconButton, Snackbar, Text, useTheme } from 'react-native-paper';
@@ -46,7 +46,7 @@ export default function AppsScreen() {
   const loadApps = useCallback(async () => {
     try {
       setLoading(true);
-      const apps = await InstalledAppsModule.getInstalledApps(true, true);
+      const apps = await InstalledAppsModule.getInstalledApps(true, false);
       setApps(apps);
       setLastRefresh(Date.now());
 

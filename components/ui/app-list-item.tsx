@@ -1,9 +1,11 @@
-import React, { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 import type { MD3Theme } from 'react-native-paper';
 import { Checkbox, Chip, Text, TouchableRipple, useTheme } from 'react-native-paper';
 import { StatusColors } from '../../constants/paper-theme';
 import type { AppInfo } from '../../modules/installed-apps';
+import { getAppIcon } from '../../modules/installed-apps';
+import { useAppsStore } from '../../stores/apps-store';
 
 interface AppListItemProps {
   app: AppInfo;
@@ -39,6 +41,22 @@ export const AppListItem = memo(function AppListItem({
   onLongPress,
 }: AppListItemProps) {
   const theme = useTheme<MD3Theme>();
+  const updateAppIcon = useAppsStore((state) => state.updateAppIcon);
+  const [icon, setIcon] = useState<string | null>(app.icon);
+  
+  // Lazy load icon if not present
+  useEffect(() => {
+    if (!app.icon && app.packageName) {
+      let mounted = true;
+      getAppIcon(app.packageName).then((loadedIcon) => {
+        if (mounted && loadedIcon) {
+          setIcon(loadedIcon);
+          updateAppIcon(app.packageName, loadedIcon);
+        }
+      });
+      return () => { mounted = false; };
+    }
+  }, [app.icon, app.packageName, updateAppIcon]);
   
   const displayStatus = status || (app.isSystem ? 'system' : 'installed');
   
@@ -60,9 +78,9 @@ export const AppListItem = memo(function AppListItem({
         )}
         
         <View style={styles.iconContainer}>
-          {app.icon ? (
+          {icon ? (
             <Image
-              source={{ uri: `data:image/png;base64,${app.icon}` }}
+              source={{ uri: `data:image/png;base64,${icon}` }}
               style={styles.icon}
               resizeMode="contain"
             />
